@@ -1,11 +1,16 @@
-import { Card, CardTitle, CheckItem, OutlineButton, Pill, PrimaryButton, TableHead, TableRow, ellipsis } from '../components/ui';
-import { BADGE_CHECKS, BADGE_QUEUE, type BadgeRequest } from '../data';
+import { Card, CardTitle, CheckItem, DataState, OutlineButton, Pill, PrimaryButton, TableHead, TableRow, ellipsis } from '../components/ui';
+import { BADGE_CHECKS } from '../data';
+import { useBadges } from '../hooks/useData';
+import { asTone, badgeStatus, type Badge } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
 const COLS = 'minmax(0, 1.4fr) minmax(0, 1.2fr) 108px 120px 96px';
 
 export function Badges({ selected, onSelect }: { selected: number; onSelect: (i: number) => void }) {
-  const current = BADGE_QUEUE[Math.min(selected, BADGE_QUEUE.length - 1)];
+  const { data, loading, error } = useBadges();
+  const queue = [...data].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const current = queue.length ? queue[Math.min(selected, queue.length - 1)] : null;
+  const pending = queue.filter((b) => b.status !== 'ready').length;
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, alignItems: 'start' }}>
@@ -13,14 +18,16 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
         <Card style={{ overflowX: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', padding: '13px 18px', borderBottom: `1px solid ${L.headBd}` }}>
             <CardTitle title="คำขอออกบัตรผู้รับเหมา" sub="เลือกรายการเพื่อดูตัวอย่างบัตรและออกบัตร" style={{ flex: 1 }} />
-            <div style={{ fontFamily: MONO, fontSize: 11, padding: '3px 9px', borderRadius: 20, background: 'oklch(0.96 0.03 70)', color: 'oklch(0.45 0.12 70)', border: '1px solid oklch(0.88 0.06 70)' }}>รอดำเนินการ 9</div>
+            <div style={{ fontFamily: MONO, fontSize: 11, padding: '3px 9px', borderRadius: 20, background: 'oklch(0.96 0.03 70)', color: 'oklch(0.45 0.12 70)', border: '1px solid oklch(0.88 0.06 70)' }}>รอดำเนินการ {pending}</div>
           </div>
           <TableHead columns={COLS} minWidth={720} labels={['ผู้ปฏิบัติงาน', 'บริษัท', 'อบรมผ่าน', 'ประเภทบัตร', 'สถานะ']} />
-          {BADGE_QUEUE.map((b, i) => {
+          <DataState loading={loading} error={error} count={queue.length} />
+          {queue.map((b, i) => {
             const on = b === current;
+            const [statusLabel, statusTone] = badgeStatus(b.status);
             return (
               <TableRow
-                key={b.cardNo}
+                key={b.id}
                 columns={COLS}
                 minWidth={720}
                 className="h-badge-row"
@@ -29,12 +36,12 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
               >
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 500, ...ellipsis }}>{b.name}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 10.5, color: 'oklch(0.58 0.02 265)' }}>{b.idNo}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 10.5, color: 'oklch(0.58 0.02 265)' }}>{b.id_no}</div>
                 </div>
                 <div style={{ fontSize: 12, color: 'oklch(0.45 0.02 265)', ...ellipsis }}>{b.company}</div>
-                <div><Pill t={b.trainingTone}>{b.training}</Pill></div>
+                <div><Pill t={asTone(b.training_status)}>{b.training}</Pill></div>
                 <div style={{ fontSize: 12, color: 'oklch(0.45 0.02 265)' }}>{b.kind}</div>
-                <div><Pill t={b.statusTone}>{b.status}</Pill></div>
+                <div><Pill t={statusTone}>{statusLabel}</Pill></div>
               </TableRow>
             );
           })}
@@ -48,20 +55,22 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
         </Card>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 88 }}>
-        <BadgePreview badge={current} />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <PrimaryButton style={{ flex: 1, textAlign: 'center', padding: 9, borderRadius: 8, fontSize: 12.5 }}>ออกบัตร</PrimaryButton>
-          <OutlineButton style={{ padding: '9px 14px', borderRadius: 8, fontSize: 12.5, background: '#fff' }}>พิมพ์</OutlineButton>
+      {current && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 88 }}>
+          <BadgePreview badge={current} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <PrimaryButton style={{ flex: 1, textAlign: 'center', padding: 9, borderRadius: 8, fontSize: 12.5 }}>ออกบัตร</PrimaryButton>
+            <OutlineButton style={{ padding: '9px 14px', borderRadius: 8, fontSize: 12.5, background: '#fff' }}>พิมพ์</OutlineButton>
+          </div>
+          <div style={{ fontSize: 11, color: 'oklch(0.55 0.02 265)', textAlign: 'center' }}>บัตรมีอายุ 1 ปี และผูกกับผลการอบรมล่าสุด</div>
         </div>
-        <div style={{ fontSize: 11, color: 'oklch(0.55 0.02 265)', textAlign: 'center' }}>บัตรมีอายุ 1 ปี และผูกกับผลการอบรมล่าสุด</div>
-      </div>
+      )}
     </div>
   );
 }
 
-function BadgePreview({ badge }: { badge: BadgeRequest }) {
-  const tier = tone(badge.tier.includes('ควบคุม') ? 'info' : 'flat');
+function BadgePreview({ badge }: { badge: Badge }) {
+  const tier = tone(badge.tier?.includes('ควบคุม') ? 'info' : 'flat');
   return (
     <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid oklch(0.88 0.01 265)', background: '#fff', boxShadow: '0 8px 24px -12px oklch(0.3 0.05 265 / 0.28)' }}>
       <div style={{ background: L.navy, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -81,7 +90,7 @@ function BadgePreview({ badge }: { badge: BadgeRequest }) {
           <div style={{ fontSize: 11.5, color: 'oklch(0.5 0.02 265)', marginBottom: 8 }}>{badge.role}</div>
           <div style={{ fontSize: 11, color: 'oklch(0.45 0.02 265)', lineHeight: 1.65 }}>
             <div>บริษัท: {badge.company}</div>
-            <div>เลขบัตร: <span style={{ fontFamily: MONO }}>{badge.cardNo}</span></div>
+            <div>เลขบัตร: <span style={{ fontFamily: MONO }}>{badge.card_no}</span></div>
             <div>หมดอายุ: <span style={{ fontFamily: MONO }}>{badge.expiry}</span></div>
           </div>
         </div>

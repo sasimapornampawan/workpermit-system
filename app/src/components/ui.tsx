@@ -63,6 +63,13 @@ export function TableRow({
 
 export const ellipsis: CSSProperties = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 
+/** Loading / error / empty message for a Supabase-backed list; renders nothing once rows exist */
+export function DataState({ loading, error, count, style }: { loading: boolean; error: string | null; count: number; style?: CSSProperties }) {
+  const message = loading ? 'กำลังโหลดข้อมูล...' : error ? `โหลดข้อมูลไม่สำเร็จ: ${error}` : count === 0 ? 'ยังไม่มีข้อมูล' : null;
+  if (!message) return null;
+  return <div style={{ padding: '14px 18px', fontSize: 12.5, color: error ? tone('bad').fg : 'oklch(0.5 0.02 265)', ...style }}>{message}</div>;
+}
+
 /** Checklist item with ✓ / ! marker (badge conditions, permit attachments) */
 export function CheckItem({ ok, label, detail, mono }: { ok: boolean; label: string; detail: string; mono?: boolean }) {
   const t = tone(ok ? 'ok' : 'warn');

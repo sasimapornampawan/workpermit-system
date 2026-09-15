@@ -1,7 +1,17 @@
 import { NAV, type Screen } from '../data';
+import { useBadges, useContractors, usePermits } from '../hooks/useData';
 import { L, MONO } from '../theme';
 
 export function Sidebar({ screen, onNavigate, bilingual }: { screen: Screen; onNavigate: (s: Screen) => void; bilingual: boolean }) {
+  const contractors = useContractors();
+  const badges = useBadges();
+  const permits = usePermits();
+  const counts: Partial<Record<Screen, number>> = {
+    contractors: contractors.data.length,
+    badges: badges.data.filter((b) => b.status !== 'ready').length,
+    permits: permits.data.filter((p) => p.status === 'pending').length,
+  };
+
   return (
     <aside style={{ width: 232, flex: '0 0 232px', background: L.navy, color: 'oklch(0.97 0.01 265)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' }}>
       <div style={{ padding: '20px 18px 18px', borderBottom: '1px solid oklch(0.3 0.04 265)' }}>
@@ -18,6 +28,7 @@ export function Sidebar({ screen, onNavigate, bilingual }: { screen: Screen; onN
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', color: 'oklch(0.62 0.03 265)', padding: '0 8px 8px' }}>เมนูหลัก</div>
         {NAV.map((item) => {
           const on = item.id === screen;
+          const count = counts[item.id];
           return (
             <div
               key={item.id}
@@ -30,8 +41,8 @@ export function Sidebar({ screen, onNavigate, bilingual }: { screen: Screen; onN
                 <div style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</div>
                 {bilingual && <div style={{ fontSize: 10, color: 'oklch(0.68 0.03 265)', fontFamily: MONO }}>{item.en}</div>}
               </div>
-              {item.count && (
-                <div style={{ fontFamily: MONO, fontSize: 10.5, padding: '1px 6px', borderRadius: 10, background: 'oklch(0.34 0.05 265)', color: 'oklch(0.88 0.03 265)' }}>{item.count}</div>
+              {!!count && (
+                <div style={{ fontFamily: MONO, fontSize: 10.5, padding: '1px 6px', borderRadius: 10, background: 'oklch(0.34 0.05 265)', color: 'oklch(0.88 0.03 265)' }}>{count}</div>
               )}
             </div>
           );

@@ -1,17 +1,28 @@
-import { Bar, Card, CardTitle, OutlineButton, Pill, PrimaryButton, TableHead, TableRow, ellipsis } from '../components/ui';
-import { COURSES, EXAM_ROWS, QUIZ_OPTIONS, QUIZ_QUESTION, VIDEO_LENGTH } from '../data';
+import { Bar, Card, CardTitle, DataState, OutlineButton, Pill, PrimaryButton, TableHead, TableRow, ellipsis } from '../components/ui';
+import { QUIZ_OPTIONS, QUIZ_QUESTION, VIDEO_LENGTH } from '../data';
+import { useCourses, useExamResults } from '../hooks/useData';
 import { formatTime, type LessonVideo } from '../hooks/useLessonVideo';
+import { localDate } from '../lib/stats';
+import { examResult } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
 const COLS = 'minmax(0, 1.3fr) minmax(0, 1.2fr) 100px 72px 96px';
 
 type Props = { video: LessonVideo; quizAnswer: string | null; onAnswer: (key: string) => void };
 
+const rateColor = (rate: number) => (rate >= 90 ? C.grn : rate >= 80 ? C.acc : C.amb);
+
 export function Training({ video, quizAnswer, onAnswer }: Props) {
+  const courses = useCourses();
+  const exams = useExamResults();
+  const courseList = [...courses.data].sort((a, b) => a.code.localeCompare(b.code));
+  const examList = [...exams.data].sort((a, b) => b.taken_on.localeCompare(a.taken_on));
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <DataState loading={courses.loading} error={courses.error} count={courseList.length} style={{ padding: 0 }} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(215px, 1fr))', gap: 12 }}>
-        {COURSES.map((c) => (
+        {courseList.map((c) => (
           <Card key={c.code} style={{ padding: '14px 15px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
               <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.35 }}>{c.name}</div>
@@ -21,9 +32,9 @@ export function Training({ video, quizAnswer, onAnswer }: Props) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'oklch(0.5 0.02 265)', marginBottom: 5 }}>
                 <span>อัตราผ่าน</span>
-                <span style={{ fontFamily: MONO, color: 'oklch(0.3 0.02 265)', fontWeight: 500 }}>{c.rate}</span>
+                <span style={{ fontFamily: MONO, color: 'oklch(0.3 0.02 265)', fontWeight: 500 }}>{c.pass_rate}%</span>
               </div>
-              <Bar pct={c.rate} color={c.color} height={7} radius={4} />
+              <Bar pct={`${c.pass_rate}%`} color={rateColor(c.pass_rate)} height={7} radius={4} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'oklch(0.55 0.02 265)', borderTop: `1px solid ${L.rowBd}`, paddingTop: 9 }}>
               <span>ผู้เข้าอบรม {c.taken} คน</span>
@@ -40,18 +51,22 @@ export function Training({ video, quizAnswer, onAnswer }: Props) {
             <OutlineButton style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12 }}>ส่งออกผล</OutlineButton>
           </div>
           <TableHead columns={COLS} minWidth={680} labels={['ผู้เข้าทดสอบ', 'หลักสูตร', 'วันที่', 'คะแนน', 'ผล']} />
-          {EXAM_ROWS.map((e) => (
-            <TableRow key={e.name + e.course} columns={COLS} minWidth={680}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 500, ...ellipsis }}>{e.name}</div>
-                <div style={{ fontSize: 10.5, color: 'oklch(0.58 0.02 265)' }}>{e.company}</div>
-              </div>
-              <div style={{ fontSize: 12, color: 'oklch(0.45 0.02 265)', ...ellipsis }}>{e.course}</div>
-              <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.5 0.02 265)' }}>{e.date}</div>
-              <div style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 500, color: tone(e.tone).fg }}>{e.score}</div>
-              <div><Pill t={e.tone}>{e.result}</Pill></div>
-            </TableRow>
-          ))}
+          <DataState loading={exams.loading} error={exams.error} count={examList.length} />
+          {examList.map((e) => {
+            const [resultLabel, resultTone] = examResult(e.result);
+            return (
+              <TableRow key={e.id} columns={COLS} minWidth={680}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 500, ...ellipsis }}>{e.name}</div>
+                  <div style={{ fontSize: 10.5, color: 'oklch(0.58 0.02 265)' }}>{e.company}</div>
+                </div>
+                <div style={{ fontSize: 12, color: 'oklch(0.45 0.02 265)', ...ellipsis }}>{e.courses ? `${e.courses.name} (${e.course_code})` : e.course_code}</div>
+                <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.5 0.02 265)' }}>{localDate(e.taken_on).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                <div style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 500, color: tone(resultTone).fg }}>{e.score}%</div>
+                <div><Pill t={resultTone}>{resultLabel}</Pill></div>
+              </TableRow>
+            );
+          })}
         </Card>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
