@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CODING AGENTS: READ THIS FIRST
 
 This is a **handoff bundle** from Claude Design (claude.ai/design).
@@ -20,3 +21,7 @@ The design medium is **HTML/CSS/JS** — these are prototypes, not production co
 
 - `work-permit-system-prototype/README.md` — this file
 - `work-permit-system-prototype/project/` — the `Work Permit System Prototype` project files (HTML prototypes, assets, components)
+=======
+# workpermit-system
+Safety Work Permit Management System
+>>>>>>> 8f86400729add4809bd46f634afb005c391818c5
