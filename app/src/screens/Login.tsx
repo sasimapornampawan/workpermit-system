@@ -21,8 +21,16 @@ function Shell({ children }: { children: ReactNode }) {
   );
 }
 
+// Supabase Auth needs an email, so username-only accounts are created as <username>@USERNAME_DOMAIN.
+export const USERNAME_DOMAIN = 'workpermit.local';
+
+const toLoginEmail = (identifier: string) => {
+  const value = identifier.trim().toLowerCase();
+  return value.includes('@') ? value : `${value}@${USERNAME_DOMAIN}`;
+};
+
 export function Login() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,9 +43,9 @@ export function Login() {
     }
     setBusy(true);
     setError(null);
-    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { error: err } = await supabase.auth.signInWithPassword({ email: toLoginEmail(identifier), password });
     setBusy(false);
-    if (err) setError(err.message === 'Invalid login credentials' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' : err.message);
+    if (err) setError(err.message === 'Invalid login credentials' ? 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' : err.message);
   }
 
   return (
@@ -47,8 +55,15 @@ export function Login() {
           <div style={{ fontSize: 16, fontWeight: 600 }}>เข้าสู่ระบบ</div>
           <div style={{ fontSize: 12, color: C.mut }}>ใช้บัญชีที่ได้รับจากเจ้าหน้าที่ความปลอดภัย</div>
         </div>
-        <Field label="อีเมล">
-          <TextInput type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Field label="ชื่อผู้ใช้ หรืออีเมล">
+          <TextInput
+            required
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+          />
         </Field>
         <Field label="รหัสผ่าน">
           <TextInput type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
