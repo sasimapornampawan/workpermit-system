@@ -8,7 +8,7 @@
   "scripts": {
     "install-all": "npm install && cd app && npm install",
     "dev": "cd app && npm run dev",
-    "build": "npm install --legacy-peer-deps && cd app && npm install --legacy-peer-deps && npm run build",
+    "build": "cd app && npm install --legacy-peer-deps && npm run build",
     "preview": "cd app && npm run preview"
   }
 }
