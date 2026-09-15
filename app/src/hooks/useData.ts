@@ -1,80 +1,34 @@
 import { useEffect, useState } from 'react';
-import { supabase, type Contractor, type Permit, type Badge } from '../lib/supabase';
+import { supabase, type Badge, type Contractor, type Permit } from '../lib/supabase';
 
-export function useContractors() {
-  const [data, setData] = useState<Contractor[]>([]);
+function useTable<T>(table: string, select: string) {
+  const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetch() {
-      try {
-        const { data: rows, error: err } = await supabase
-          .from('contractors')
-          .select('*');
-        if (err) throw err;
-        setData(rows || []);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Error');
-        console.error('Error:', e);
-      } finally {
-        setLoading(false);
-      }
+    if (!supabase) {
+      setError('ยังไม่ได้ตั้งค่า VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY');
+      setLoading(false);
+      return;
     }
-    fetch();
-  }, []);
+    supabase.from(table).select(select).then(({ data: rows, error: err }) => {
+      if (err) setError(err.message);
+      else setData((rows ?? []) as unknown as T[]);
+      setLoading(false);
+    });
+  }, [table, select]);
 
   return { data, loading, error };
 }
 
-export function usePermits() {
-  const [data, setData] = useState<Permit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const useContractors = () => useTable<Contractor>('contractors', '*');
+export const usePermits = () => useTable<Permit>('permits', '*, contractors(name)');
+export const useBadges = () => useTable<Badge>('badges', '*');
 
-  useEffect(() => {
-    async function fetch() {
-      try {
-        const { data: rows, error: err } = await supabase
-          .from('permits')
-          .select('*');
-        if (err) throw err;
-        setData(rows || []);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Error');
-        console.error('Error:', e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetch();
-  }, []);
-
-  return { data, loading, error };
-}
-
-export function useBadges() {
-  const [data, setData] = useState<Badge[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetch() {
-      try {
-        const { data: rows, error: err } = await supabase
-          .from('badges')
-          .select('*');
-        if (err) throw err;
-        setData(rows || []);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Error');
-        console.error('Error:', e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetch();
-  }, []);
-
-  return { data, loading, error };
+export function dataStateMessage(loading: boolean, error: string | null, count: number) {
+  if (loading) return 'กำลังโหลดข้อมูล...';
+  if (error) return `โหลดข้อมูลไม่สำเร็จ: ${error}`;
+  if (count === 0) return 'ยังไม่มีข้อมูล';
+  return null;
 }

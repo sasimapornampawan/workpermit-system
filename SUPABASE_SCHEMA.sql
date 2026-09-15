@@ -59,6 +59,9 @@ CREATE POLICY "Enable read access for all users" ON permits
 CREATE POLICY "Enable read access for all users" ON badges
   FOR SELECT USING (true);
 
+-- RLS policies alone are not enough: the anon role also needs table privileges
+GRANT SELECT ON public.contractors, public.permits, public.badges TO anon;
+
 -- Insert sample data
 INSERT INTO contractors (name, initials, code, scope, workers, insurance, cards, status) VALUES
   ('บจก. เอส.พี. เอ็นจิเนียริ่ง', 'SP', 'CTR-0118', 'งานเครื่องกล', 142, '31 ธ.ค. 2569', '138 / 142', 'ok'),

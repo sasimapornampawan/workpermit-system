@@ -1,10 +1,14 @@
 import { Bar, Card, CardTitle, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
-import { ALERTS, DASH_FILTERS, KPIS, PERMIT_ROWS, TYPE_BARS } from '../data';
+import { ALERTS, DASH_FILTERS, KPIS, TYPE_BARS } from '../data';
+import { dataStateMessage, usePermits } from '../hooks/useData';
+import { permitStatus, riskTone } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
 const COLS = '118px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr) 96px 104px 92px';
 
 export function Dashboard() {
+  const { data: permits, loading, error } = usePermits();
+  const message = dataStateMessage(loading, error, permits.length);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
@@ -61,18 +65,22 @@ export function Dashboard() {
             );
           })}
         </div>
-        <TableHead columns={COLS} minWidth={900} labels={['เลขที่', 'ประเภทงาน', 'ผู้รับเหมา', 'พื้นที่', 'ความเสี่ยง', 'ช่วงเวลา', 'สถานะ']} />
-        {PERMIT_ROWS.map((r) => (
-          <TableRow key={r.id} columns={COLS} minWidth={900} style={{ cursor: 'pointer' }}>
-            <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.45 0.1 265)', fontWeight: 500 }}>{r.id}</div>
-            <div style={{ fontSize: 12.5, ...ellipsis }}>{r.type}</div>
-            <div style={{ fontSize: 12.5, color: 'oklch(0.42 0.02 265)', ...ellipsis }}>{r.contractor}</div>
-            <div style={{ fontSize: 12.5, color: 'oklch(0.5 0.02 265)', ...ellipsis }}>{r.area}</div>
-            <div><Pill t={r.riskTone}>{r.risk}</Pill></div>
-            <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.5 0.02 265)' }}>{r.time}</div>
-            <div><Pill t={r.statusTone}>{r.status}</Pill></div>
-          </TableRow>
-        ))}
+        <TableHead columns={COLS} minWidth={900} labels={['เลขที่', 'ประเภทงาน', 'ผู้รับเหมา', 'พื้นที่', 'ความเสี่ยง', 'วันที่สร้าง', 'สถานะ']} />
+        {message && <div style={{ padding: '16px 18px', fontSize: 12.5, color: error ? tone('bad').fg : 'oklch(0.5 0.02 265)' }}>{message}</div>}
+        {permits.map((r) => {
+          const [statusLabel, statusTone] = permitStatus(r.status);
+          return (
+            <TableRow key={r.id} columns={COLS} minWidth={900} style={{ cursor: 'pointer' }}>
+              <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.45 0.1 265)', fontWeight: 500 }}>{r.permit_no}</div>
+              <div style={{ fontSize: 12.5, ...ellipsis }}>{r.type}</div>
+              <div style={{ fontSize: 12.5, color: 'oklch(0.42 0.02 265)', ...ellipsis }}>{r.contractors?.name ?? '—'}</div>
+              <div style={{ fontSize: 12.5, color: 'oklch(0.5 0.02 265)', ...ellipsis }}>{r.area}</div>
+              <div><Pill t={riskTone(r.risk)}>{r.risk}</Pill></div>
+              <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.5 0.02 265)' }}>{new Date(r.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}</div>
+              <div><Pill t={statusTone}>{statusLabel}</Pill></div>
+            </TableRow>
+          );
+        })}
       </Card>
     </div>
   );

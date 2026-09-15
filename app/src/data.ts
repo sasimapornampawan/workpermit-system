@@ -48,16 +48,6 @@ export const ALERTS: { title: string; detail: string; time: string; tone: Tone }
 
 export const DASH_FILTERS = ['ทั้งหมด', 'ความเสี่ยงสูง', 'ใกล้หมดอายุ'];
 
-export const PERMIT_ROWS: { id: string; type: string; contractor: string; area: string; risk: string; riskTone: Tone; time: string; status: string; statusTone: Tone }[] = [
-  { id: 'WP-2569-0914-001', type: 'งานที่มีความร้อน — เชื่อมท่อไอน้ำ', contractor: 'บจก. เอส.พี. เอ็นจิเนียริ่ง', area: 'หน่วยผลิต A — ชั้น 2', risk: 'สูง', riskTone: 'bad', time: '08:00–17:00', status: 'กำลังทำงาน', statusTone: 'ok' },
-  { id: 'WP-2569-0914-002', type: 'งานในที่อับอากาศ — ล้างถัง T-204', contractor: 'บจก. พี.เค. เซอร์วิส', area: 'คลังวัตถุดิบ', risk: 'สูง', riskTone: 'bad', time: '07:30–12:00', status: 'ระงับงาน', statusTone: 'bad' },
-  { id: 'WP-2569-0914-003', type: 'งานบนที่สูง — เปลี่ยนหลังคา', contractor: 'บจก. ไทยคอนสตรัคชั่น', area: 'อาคารคลังสินค้า 3', risk: 'สูง', riskTone: 'bad', time: '08:00–16:00', status: 'กำลังทำงาน', statusTone: 'ok' },
-  { id: 'WP-2569-0914-004', type: 'งานระบบไฟฟ้า — เปลี่ยนเบรกเกอร์', contractor: 'บจก. อีเล็คโทร พลัส', area: 'ห้องไฟฟ้า MDB-2', risk: 'ปานกลาง', riskTone: 'warn', time: '09:00–15:00', status: 'รออนุมัติ', statusTone: 'warn' },
-  { id: 'WP-2569-0914-005', type: 'งานยกของหนัก — ติดตั้งปั๊ม', contractor: 'บจก. เอส.พี. เอ็นจิเนียริ่ง', area: 'ลานเครื่องจักร', risk: 'ปานกลาง', riskTone: 'warn', time: '13:00–18:00', status: 'อนุมัติแล้ว', statusTone: 'info' },
-  { id: 'WP-2569-0914-006', type: 'งานทั่วไป — ทำความสะอาดท่อระบาย', contractor: 'บจก. คลีนโปร แมเนจเมนท์', area: 'รอบอาคารผลิต', risk: 'ต่ำ', riskTone: 'ok', time: '08:00–17:00', status: 'กำลังทำงาน', statusTone: 'ok' },
-  { id: 'WP-2569-0913-018', type: 'งานสารเคมี — ถ่ายเทกรด', contractor: 'บจก. เคมแคร์', area: 'คลังสารเคมี', risk: 'ปานกลาง', riskTone: 'warn', time: 'ปิดงาน 16:45', status: 'ปิดงานแล้ว', statusTone: 'flat' },
-];
-
 /* ---------- Contractors ---------- */
 
 export const CONTRACTOR_KPIS = [
@@ -65,16 +55,6 @@ export const CONTRACTOR_KPIS = [
   { label: 'พนักงานผู้รับเหมาทั้งหมด', value: '618' },
   { label: 'ประกันภัยใกล้หมดอายุ', value: '5' },
   { label: 'ระงับการทำงาน', value: '2' },
-];
-
-export const CONTRACTORS: { name: string; initials: string; code: string; scope: string; workers: number; insurance: string; insTone: Tone; cards: string; status: string; statusTone: Tone }[] = [
-  { name: 'บจก. เอส.พี. เอ็นจิเนียริ่ง', initials: 'SP', code: 'CTR-0118', scope: 'งานเครื่องกล', workers: 142, insurance: '31 ธ.ค. 2569', insTone: 'ok', cards: '138 / 142', status: 'ใช้งานได้', statusTone: 'ok' },
-  { name: 'บจก. ไทยคอนสตรัคชั่น', initials: 'TC', code: 'CTR-0092', scope: 'งานโครงสร้าง', workers: 96, insurance: '31 มี.ค. 2570', insTone: 'ok', cards: '91 / 96', status: 'ใช้งานได้', statusTone: 'ok' },
-  { name: 'บจก. พี.เค. เซอร์วิส', initials: 'PK', code: 'CTR-0203', scope: 'งานทำความสะอาดถัง', workers: 58, insurance: '30 ก.ย. 2569', insTone: 'warn', cards: '52 / 58', status: 'เฝ้าระวัง', statusTone: 'warn' },
-  { name: 'บจก. อีเล็คโทร พลัส', initials: 'EP', code: 'CTR-0147', scope: 'งานไฟฟ้า', workers: 44, insurance: '30 มิ.ย. 2570', insTone: 'ok', cards: '44 / 44', status: 'ใช้งานได้', statusTone: 'ok' },
-  { name: 'บจก. คลีนโปร แมเนจเมนท์', initials: 'CP', code: 'CTR-0231', scope: 'งานสนับสนุน', workers: 88, insurance: '31 ม.ค. 2570', insTone: 'ok', cards: '80 / 88', status: 'ใช้งานได้', statusTone: 'ok' },
-  { name: 'บจก. เคมแคร์', initials: 'CC', code: 'CTR-0175', scope: 'งานสารเคมี', workers: 36, insurance: '15 ต.ค. 2569', insTone: 'warn', cards: '30 / 36', status: 'เฝ้าระวัง', statusTone: 'warn' },
-  { name: 'บจก. ไฮไรส์ เวิร์ค', initials: 'HR', code: 'CTR-0260', scope: 'งานบนที่สูง', workers: 27, insurance: '20 ส.ค. 2569', insTone: 'bad', cards: '0 / 27', status: 'ระงับ', statusTone: 'bad' },
 ];
 
 /* ---------- Badges ---------- */
