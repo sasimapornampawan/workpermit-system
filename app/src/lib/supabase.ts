@@ -7,6 +7,19 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // createClient throws on an empty URL, which would blank the whole app when env vars are missing.
 export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
+export type Role = 'safety' | 'contractor' | 'area_owner' | 'manager';
+
+export type Profile = { id: string; full_name: string; role: Role; contractor_id: string | null };
+
+export const ROLE_LABEL: Record<Role, string> = {
+  safety: 'เจ้าหน้าที่ความปลอดภัย (จป.)',
+  contractor: 'ผู้รับเหมา',
+  area_owner: 'เจ้าของพื้นที่',
+  manager: 'ผู้จัดการโรงงาน',
+};
+
+export const APPROVER_ROLES: Role[] = ['safety', 'area_owner', 'manager'];
+
 export type Contractor = {
   id: string;
   name: string;
@@ -28,7 +41,12 @@ export type Permit = {
   area: string;
   risk: string;
   status: string;
+  detail: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  workers: number | null;
   created_at: string;
+  permit_next_step: Role | null;
   contractors: { name: string } | null;
 };
 
@@ -79,12 +97,14 @@ export const permitStatus = lookup({
   active: ['กำลังทำงาน', 'ok'],
   pending: ['รออนุมัติ', 'warn'],
   approved: ['อนุมัติแล้ว', 'info'],
+  rejected: ['ไม่อนุมัติ', 'bad'],
   suspended: ['ระงับงาน', 'bad'],
   closed: ['ปิดงานแล้ว', 'flat'],
 });
 
 export const badgeStatus = lookup({
   ready: ['พร้อมออกบัตร', 'ok'],
+  issued: ['ออกบัตรแล้ว', 'info'],
   pending_training: ['รออบรมเพิ่ม', 'warn'],
   pending_docs: ['รอเอกสาร', 'warn'],
   rejected: ['ตีกลับ', 'bad'],

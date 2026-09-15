@@ -67,21 +67,6 @@ export const PERMIT_TYPES: { name: string; detail: string; level: string; tone: 
   { name: 'งานทั่วไปในพื้นที่ผลิต', detail: 'งานบำรุงรักษาที่ไม่เข้าข่ายงานเสี่ยงสูง', level: 'ความเสี่ยงต่ำ', tone: 'ok', code: 'GN-08' },
 ];
 
-export const DRAFT_PERMIT_NO = 'WP-2569-0912-014';
-
-export const FORM_FIELDS = [
-  { label: 'เลขที่ใบอนุญาต', value: DRAFT_PERMIT_NO, wide: false },
-  { label: 'วันที่ขออนุญาต', value: '14 กันยายน 2569', wide: false },
-  { label: 'บริษัทผู้รับเหมา', value: 'บจก. เอส.พี. เอ็นจิเนียริ่ง (CTR-0118)', wide: false },
-  { label: 'ผู้ควบคุมงาน', value: 'นายอนุชา ศรีสมบัติ — CT-2569-0460', wide: false },
-  { label: 'พื้นที่ปฏิบัติงาน', value: 'หน่วยผลิต A — ชั้น 2 ใกล้ท่อไอน้ำ HS-12', wide: true },
-  { label: 'ลักษณะงานโดยละเอียด', value: 'ตัดและเชื่อมท่อไอน้ำขนาด 4 นิ้ว เปลี่ยนวาล์วควบคุม พร้อมทดสอบแรงดันหลังติดตั้ง', wide: true },
-  { label: 'วันเริ่ม — เวลา', value: '15 ก.ย. 2569  08:00', wide: false },
-  { label: 'วันสิ้นสุด — เวลา', value: '15 ก.ย. 2569  17:00', wide: false },
-  { label: 'จำนวนผู้ปฏิบัติงาน', value: '5 คน', wide: false },
-  { label: 'เจ้าของพื้นที่ผู้อนุญาต', value: 'ฝ่ายผลิต A — นายประสิทธิ์ มั่นคง', wide: false },
-];
-
 export const ATTACHMENTS = [
   { ok: true, label: 'แผนการปฏิบัติงาน (Method Statement)', file: 'method-statement-hs12.pdf' },
   { ok: true, label: 'ผลการตรวจวัดก๊าซ', file: 'gas-test-20690915-0730.pdf' },
@@ -104,20 +89,4 @@ export const PPE = [
   { label: 'ชุดกันประกายไฟ', required: true }, { label: 'รองเท้านิรภัย', required: true },
   { label: 'หน้ากากกรองฟูม', required: true }, { label: 'เข็มขัดนิรภัยเต็มตัว', required: true },
   { label: 'ที่อุดหูลดเสียง', required: false }, { label: 'ชุดป้องกันสารเคมี', required: false },
-];
-
-export const PERMIT_WORKERS: { name: string; card: string; courses: string; status: string; tone: Tone }[] = [
-  { name: 'นายอนุชา ศรีสมบัติ', card: 'CT-2569-0460', courses: 'TR-101, TR-204, TR-206', status: 'ผ่าน', tone: 'ok' },
-  { name: 'นายวิชัย ทองสุข', card: 'CT-2569-0418', courses: 'TR-101, TR-204, TR-208', status: 'ผ่าน', tone: 'ok' },
-  { name: 'นายธีรยุทธ บุญมี', card: 'CT-2569-0480', courses: 'TR-101, TR-204', status: 'ผ่าน', tone: 'ok' },
-  { name: 'นายสมพงษ์ แก้วมณี', card: 'CT-2569-0455', courses: 'TR-101', status: 'ขาด TR-204', tone: 'warn' },
-  { name: 'นายเอกชัย พูลผล', card: 'CT-2568-0902', courses: 'TR-101 (หมดอายุ)', status: 'บัตรหมดอายุ', tone: 'bad' },
-];
-
-/** ok = approved, warn = pending on this step, flat = not reached yet */
-export const APPROVALS: { role: string; person: string; time: string; tone: 'ok' | 'warn' | 'flat' }[] = [
-  { role: 'ผู้ขออนุญาต', person: 'นายอนุชา ศรีสมบัติ — ผู้ควบคุมงาน', time: '14 ก.ย. 2569 09:05', tone: 'ok' },
-  { role: 'เจ้าหน้าที่ความปลอดภัย (จป.วิชาชีพ)', person: 'สมชาย อารักษ์', time: 'รอดำเนินการ', tone: 'warn' },
-  { role: 'เจ้าของพื้นที่', person: 'ฝ่ายผลิต A — นายประสิทธิ์ มั่นคง', time: 'รอลำดับก่อนหน้า', tone: 'flat' },
-  { role: 'ผู้จัดการโรงงาน', person: 'นายวีระพงษ์ เจริญสุข', time: 'เฉพาะงานความเสี่ยงสูง', tone: 'flat' },
 ];

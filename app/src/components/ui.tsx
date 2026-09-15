@@ -64,8 +64,10 @@ export function TableRow({
 export const ellipsis: CSSProperties = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 
 /** Loading / error / empty message for a Supabase-backed list; renders nothing once rows exist */
-export function DataState({ loading, error, count, style }: { loading: boolean; error: string | null; count: number; style?: CSSProperties }) {
-  const message = loading ? 'กำลังโหลดข้อมูล...' : error ? `โหลดข้อมูลไม่สำเร็จ: ${error}` : count === 0 ? 'ยังไม่มีข้อมูล' : null;
+export function DataState({ loading, error, count, empty = 'ยังไม่มีข้อมูล', style }: {
+  loading: boolean; error: string | null; count: number; empty?: string; style?: CSSProperties;
+}) {
+  const message = loading ? 'กำลังโหลดข้อมูล...' : error ? `โหลดข้อมูลไม่สำเร็จ: ${error}` : count === 0 ? empty : null;
   if (!message) return null;
   return <div style={{ padding: '14px 18px', fontSize: 12.5, color: error ? tone('bad').fg : 'oklch(0.5 0.02 265)', ...style }}>{message}</div>;
 }

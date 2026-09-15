@@ -4,10 +4,24 @@ import {
   type Finding, type MonthlyReport, type Permit, type Recommendation,
 } from '../lib/supabase';
 
+const listeners = new Set<() => void>();
+
+/** Refetch every mounted table hook, e.g. after a write so the sidebar counts update too. */
+export const notifyDataChanged = () => listeners.forEach((listener) => listener());
+
 function useTable<T>(table: string, select = '*') {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    const listener = () => setVersion((v) => v + 1);
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -16,17 +30,21 @@ function useTable<T>(table: string, select = '*') {
       return;
     }
     supabase.from(table).select(select).then(({ data: rows, error: err }) => {
-      if (err) setError(err.message);
-      else setData((rows ?? []) as unknown as T[]);
+      if (err) {
+        setError(err.message);
+      } else {
+        setData((rows ?? []) as unknown as T[]);
+        setError(null);
+      }
       setLoading(false);
     });
-  }, [table, select]);
+  }, [table, select, version]);
 
   return { data, loading, error };
 }
 
 export const useContractors = () => useTable<Contractor>('contractors');
-export const usePermits = () => useTable<Permit>('permits', '*, contractors(name)');
+export const usePermits = () => useTable<Permit>('permits', '*, contractors(name), permit_next_step');
 export const useBadges = () => useTable<Badge>('badges');
 export const useCourses = () => useTable<Course>('courses');
 export const useExamResults = () => useTable<ExamResult>('exam_results', '*, courses(name)');

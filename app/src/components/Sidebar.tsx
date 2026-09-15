@@ -1,16 +1,23 @@
 import { NAV, type Screen } from '../data';
+import { signOut, useProfile } from '../hooks/useAuth';
 import { useBadges, useContractors, usePermits } from '../hooks/useData';
+import { ROLE_LABEL } from '../lib/supabase';
 import { L, MONO } from '../theme';
 
-export function Sidebar({ screen, onNavigate, bilingual }: { screen: Screen; onNavigate: (s: Screen) => void; bilingual: boolean }) {
+type Props = { screen: Screen; screens: Screen[]; onNavigate: (s: Screen) => void; bilingual: boolean };
+
+export function Sidebar({ screen, screens, onNavigate, bilingual }: Props) {
+  const profile = useProfile();
   const contractors = useContractors();
   const badges = useBadges();
   const permits = usePermits();
   const counts: Partial<Record<Screen, number>> = {
+    dashboard: permits.data.filter((p) => p.permit_next_step === profile.role).length,
     contractors: contractors.data.length,
-    badges: badges.data.filter((b) => b.status !== 'ready').length,
+    badges: badges.data.filter((b) => b.status !== 'issued').length,
     permits: permits.data.filter((p) => p.status === 'pending').length,
   };
+  const initials = profile.full_name.replace(/^(นางสาว|นาง|นาย)\s*/, '').slice(0, 2);
 
   return (
     <aside style={{ width: 232, flex: '0 0 232px', background: L.navy, color: 'oklch(0.97 0.01 265)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' }}>
@@ -26,7 +33,7 @@ export function Sidebar({ screen, onNavigate, bilingual }: { screen: Screen; onN
 
       <nav style={{ padding: '14px 10px', flex: 1, overflowY: 'auto' }}>
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', color: 'oklch(0.62 0.03 265)', padding: '0 8px 8px' }}>เมนูหลัก</div>
-        {NAV.map((item) => {
+        {NAV.filter((item) => screens.includes(item.id)).map((item) => {
           const on = item.id === screen;
           const count = counts[item.id];
           return (
@@ -50,11 +57,19 @@ export function Sidebar({ screen, onNavigate, bilingual }: { screen: Screen; onN
       </nav>
 
       <div style={{ padding: 14, borderTop: '1px solid oklch(0.3 0.04 265)', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'oklch(0.35 0.05 265)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'oklch(0.85 0.03 265)' }}>สอ</div>
+        <div style={{ width: 30, height: 30, flex: '0 0 30px', borderRadius: '50%', background: 'oklch(0.35 0.05 265)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'oklch(0.85 0.03 265)' }}>{initials}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>สมชาย อารักษ์</div>
-          <div style={{ fontSize: 10.5, color: 'oklch(0.7 0.03 265)' }}>เจ้าหน้าที่ความปลอดภัย</div>
+          <div style={{ fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile.full_name}</div>
+          <div style={{ fontSize: 10.5, color: 'oklch(0.7 0.03 265)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ROLE_LABEL[profile.role]}</div>
         </div>
+        <button
+          type="button"
+          onClick={() => signOut()}
+          className="h-nav"
+          style={{ background: 'transparent', border: '1px solid oklch(0.36 0.05 265)', borderRadius: 6, color: 'oklch(0.86 0.02 265)', fontSize: 11, padding: '4px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          ออกจากระบบ
+        </button>
       </div>
     </aside>
   );

@@ -1,8 +1,11 @@
+import { useState } from 'react';
+import { Button, FormMessage } from '../components/form';
 import { Bar, Card, CardTitle, DataState, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
 import { DASH_FILTERS } from '../data';
-import { useAlerts, useContractors, useFindings, usePermits } from '../hooks/useData';
+import { useProfile } from '../hooks/useAuth';
+import { notifyDataChanged, useAlerts, useContractors, useFindings, usePermits } from '../hooks/useData';
 import { countBy, pct, sameMonth } from '../lib/stats';
-import { asTone, permitStatus, riskTone } from '../lib/supabase';
+import { APPROVER_ROLES, ROLE_LABEL, asTone, permitStatus, riskTone, supabase, type Permit, type Role } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
 const COLS = '118px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr) 96px 104px 92px';
@@ -21,7 +24,9 @@ export function Dashboard() {
   const contractors = useContractors();
   const findings = useFindings();
   const alerts = useAlerts();
+  const profile = useProfile();
   const now = new Date();
+  const waitingForMe = permits.data.filter((p) => p.permit_next_step === profile.role);
 
   const byStatus = (s: string) => permits.data.filter((p) => p.status === s).length;
   const onSite = contractors.data.filter((c) => c.status !== 'bad');
@@ -46,6 +51,10 @@ export function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
         {kpis.map((k) => <StatTile key={k.label} {...k} />)}
       </div>
+
+      {APPROVER_ROLES.includes(profile.role) && (
+        <ApprovalQueue permits={waitingForMe} loading={permits.loading} error={permits.error} role={profile.role} />
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: 16 }}>
         <Card style={{ padding: '16px 18px' }}>
@@ -117,5 +126,51 @@ export function Dashboard() {
         })}
       </Card>
     </div>
+  );
+}
+
+const QUEUE_COLS = '118px minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr) 84px 190px';
+
+function ApprovalQueue({ permits, loading, error, role }: { permits: Permit[]; loading: boolean; error: string | null; role: Role }) {
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
+
+  async function decide(permit: Permit, decision: 'approved' | 'rejected') {
+    if (!supabase) return;
+    if (decision === 'rejected' && !window.confirm(`ยืนยันไม่อนุมัติ ${permit.permit_no}?`)) return;
+    setBusyId(permit.id);
+    setMessage(null);
+    const { error: err } = await supabase.rpc('decide_permit', { p_permit_id: permit.id, p_decision: decision });
+    setBusyId(null);
+    if (err) {
+      setMessage({ error: true, text: `ดำเนินการไม่สำเร็จ: ${err.message}` });
+      return;
+    }
+    setMessage({ error: false, text: `${decision === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ'} ${permit.permit_no} แล้ว` });
+    notifyDataChanged();
+  }
+
+  return (
+    <Card style={{ overflowX: 'auto' }}>
+      <div style={{ padding: '14px 18px', borderBottom: `1px solid ${L.headBd}` }}>
+        <CardTitle title={`รออนุมัติจากคุณ (${permits.length})`} sub={`ขั้นตอนของ${ROLE_LABEL[role]}`} />
+      </div>
+      <TableHead columns={QUEUE_COLS} minWidth={880} labels={['เลขที่', 'ประเภทงาน', 'ผู้รับเหมา', 'พื้นที่', 'ความเสี่ยง', 'การพิจารณา']} />
+      <DataState loading={loading} error={error} count={permits.length} empty="ไม่มี Permit ที่รอคุณอนุมัติ" />
+      {permits.map((p) => (
+        <TableRow key={p.id} columns={QUEUE_COLS} minWidth={880} hover={false}>
+          <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.45 0.1 265)', fontWeight: 500 }}>{p.permit_no}</div>
+          <div style={{ fontSize: 12.5, ...ellipsis }}>{p.type}</div>
+          <div style={{ fontSize: 12.5, color: 'oklch(0.42 0.02 265)', ...ellipsis }}>{p.contractors?.name ?? '—'}</div>
+          <div style={{ fontSize: 12.5, color: 'oklch(0.5 0.02 265)', ...ellipsis }}>{p.area}</div>
+          <div><Pill t={riskTone(p.risk)}>{p.risk}</Pill></div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <Button variant="outline" disabled={busyId !== null} onClick={() => decide(p, 'rejected')}>ไม่อนุมัติ</Button>
+            <Button disabled={busyId !== null} onClick={() => decide(p, 'approved')}>{busyId === p.id ? 'กำลังบันทึก...' : 'อนุมัติ'}</Button>
+          </div>
+        </TableRow>
+      ))}
+      {message && <FormMessage error={message.error} style={{ padding: '12px 18px' }}>{message.text}</FormMessage>}
+    </Card>
   );
 }

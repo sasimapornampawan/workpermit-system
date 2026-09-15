@@ -1,16 +1,47 @@
-import { Card, CardTitle, CheckItem, DataState, OutlineButton, Pill, PrimaryButton, TableHead, TableRow, ellipsis } from '../components/ui';
+import { useState } from 'react';
+import { Button, FormMessage } from '../components/form';
+import { Card, CardTitle, CheckItem, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
 import { BADGE_CHECKS } from '../data';
-import { useBadges } from '../hooks/useData';
-import { asTone, badgeStatus, type Badge } from '../lib/supabase';
+import { useProfile } from '../hooks/useAuth';
+import { notifyDataChanged, useBadges } from '../hooks/useData';
+import { asTone, badgeStatus, supabase, type Badge } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
 const COLS = 'minmax(0, 1.4fr) minmax(0, 1.2fr) 108px 120px 96px';
 
 export function Badges({ selected, onSelect }: { selected: number; onSelect: (i: number) => void }) {
+  const profile = useProfile();
   const { data, loading, error } = useBadges();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
+
   const queue = [...data].sort((a, b) => a.created_at.localeCompare(b.created_at));
   const current = queue.length ? queue[Math.min(selected, queue.length - 1)] : null;
-  const pending = queue.filter((b) => b.status !== 'ready').length;
+  const pending = queue.filter((b) => b.status !== 'issued').length;
+  const isSafety = profile.role === 'safety';
+
+  function select(i: number) {
+    setMessage(null);
+    onSelect(i);
+  }
+
+  async function issue(badge: Badge) {
+    if (!supabase) return;
+    setBusy(true);
+    setMessage(null);
+    const { data: rows, error: err } = await supabase
+      .from('badges')
+      .update({ status: 'issued', issued_at: new Date().toISOString(), issued_by: profile.id })
+      .eq('id', badge.id)
+      .select('id');
+    setBusy(false);
+    if (err || !rows?.length) {
+      setMessage({ error: true, text: `ออกบัตรไม่สำเร็จ: ${err?.message ?? 'ไม่มีสิทธิ์แก้ไขรายการนี้'}` });
+      return;
+    }
+    setMessage({ error: false, text: `ออกบัตร ${badge.card_no} ให้ ${badge.name} แล้ว` });
+    notifyDataChanged();
+  }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, alignItems: 'start' }}>
@@ -31,7 +62,7 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
                 columns={COLS}
                 minWidth={720}
                 className="h-badge-row"
-                onClick={() => onSelect(i)}
+                onClick={() => select(i)}
                 style={{ cursor: 'pointer', background: on ? 'oklch(0.97 0.018 265)' : '#fff', borderLeft: `3px solid ${on ? C.acc : 'transparent'}` }}
               >
                 <div style={{ minWidth: 0 }}>
@@ -58,11 +89,21 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
       {current && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 88 }}>
           <BadgePreview badge={current} />
-          <div style={{ display: 'flex', gap: 8 }}>
-            <PrimaryButton style={{ flex: 1, textAlign: 'center', padding: 9, borderRadius: 8, fontSize: 12.5 }}>ออกบัตร</PrimaryButton>
-            <OutlineButton style={{ padding: '9px 14px', borderRadius: 8, fontSize: 12.5, background: '#fff' }}>พิมพ์</OutlineButton>
-          </div>
-          <div style={{ fontSize: 11, color: 'oklch(0.55 0.02 265)', textAlign: 'center' }}>บัตรมีอายุ 1 ปี และผูกกับผลการอบรมล่าสุด</div>
+          {isSafety && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button disabled={busy || current.status !== 'ready'} onClick={() => issue(current)} style={{ flex: 1, padding: 9 }}>
+                {busy ? 'กำลังบันทึก...' : current.status === 'issued' ? 'ออกบัตรแล้ว' : 'ออกบัตร'}
+              </Button>
+              <Button variant="outline" onClick={() => window.print()} style={{ padding: '9px 14px' }}>พิมพ์</Button>
+            </div>
+          )}
+          {message ? (
+            <FormMessage error={message.error} style={{ textAlign: 'center' }}>{message.text}</FormMessage>
+          ) : (
+            <div style={{ fontSize: 11, color: 'oklch(0.55 0.02 265)', textAlign: 'center' }}>
+              {isSafety && !['ready', 'issued'].includes(current.status) ? 'ออกบัตรได้เมื่อสถานะเป็น "พร้อมออกบัตร"' : 'บัตรมีอายุ 1 ปี และผูกกับผลการอบรมล่าสุด'}
+            </div>
+          )}
         </div>
       )}
     </div>
