@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { background: oklch(0.98 0.005 265); -webkit-font-smoothing: antialiased; }
+  a { color: oklch(0.52 0.16 265); text-decoration: none; }
+  a:hover { color: oklch(0.42 0.16 265); text-decoration: underline; }
+  input, select, textarea, button { font-family: inherit; }
+  ::placeholder { color: oklch(0.68 0.02 265); }
+</style>
+</helmet>
+<div style="display: flex; align-items: stretch; min-height: 100vh; font-family: 'IBM Plex Sans Thai', system-ui, sans-serif; color: oklch(0.24 0.03 265); font-size: 14px; line-height: 1.5;">
+
+  <div style="width: 232px; flex: 0 0 232px; background: oklch(0.22 0.04 265); color: oklch(0.97 0.01 265); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;">
+    <div style="padding: 20px 18px 18px; border-bottom: 1px solid oklch(0.3 0.04 265);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 26px; height: 26px; border-radius: 6px; background: oklch(0.62 0.17 265); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: oklch(0.15 0.04 265);">P</div>
+        <div>
+          <div style="font-size: 13.5px; font-weight: 600; letter-spacing: 0.01em;">Safety Permit</div>
+          <div style="font-size: 10.5px; color: oklch(0.72 0.03 265); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em;">PTW SYSTEM v2</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding: 14px 10px; flex: 1; overflow-y: auto;">
+      <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: oklch(0.62 0.03 265); padding: 0 8px 8px;">เมนูหลัก</div>
+      <sc-for list="{{ nav }}" as="item" hint-placeholder-count="6">
+        <div onClick="{{ item.go }}" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; cursor: pointer; margin-bottom: 2px; background: {{ item.bg }}; color: {{ item.fg }};" style-hover="background: oklch(0.28 0.04 265);">
+          <div style="width: 3px; height: 15px; border-radius: 2px; background: {{ item.bar }};"></div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 13px; font-weight: 500;">{{ item.label }}</div>
+            <sc-if value="{{ bilingual }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size: 10px; color: oklch(0.68 0.03 265); font-family: 'IBM Plex Mono', monospace;">{{ item.en }}</div>
+            </sc-if>
+          </div>
+          <sc-if value="{{ item.count }}">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 1px 6px; border-radius: 10px; background: oklch(0.34 0.05 265); color: oklch(0.88 0.03 265);">{{ item.count }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="padding: 14px; border-top: 1px solid oklch(0.3 0.04 265); display: flex; align-items: center; gap: 10px;">
+      <div style="width: 30px; height: 30px; border-radius: 50%; background: oklch(0.35 0.05 265); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: oklch(0.85 0.03 265);">สอ</div>
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">สมชาย อารักษ์</div>
+        <div style="font-size: 10.5px; color: oklch(0.7 0.03 265);">เจ้าหน้าที่ความปลอดภัย</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+
+    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 14px 24px; background: #fff; border-bottom: 1px solid oklch(0.91 0.01 265); position: sticky; top: 0; z-index: 5;">
+      <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 18px; font-weight: 600; letter-spacing: -0.01em;">{{ title }}</div>
+        <div style="font-size: 12px; color: oklch(0.54 0.02 265);">{{ subtitle }}</div>
+      </div>
+      <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 7px; padding: 7px 11px; border: 1px solid oklch(0.9 0.01 265); border-radius: 7px; background: oklch(0.985 0.004 265); min-width: 190px;">
+          <div style="width: 11px; height: 11px; border: 1.5px solid oklch(0.62 0.02 265); border-radius: 50%;"></div>
+          <input placeholder="ค้นหาเลขที่ permit, ผู้รับเหมา" style="border: none; background: none; outline: none; font-size: 12.5px; width: 100%; color: inherit;" />
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 7px; background: oklch(0.96 0.02 145); border: 1px solid oklch(0.87 0.05 145); font-size: 12px; font-weight: 500; white-space: nowrap; color: oklch(0.42 0.1 145);">
+          <div style="width: 7px; height: 7px; border-radius: 50%; background: oklch(0.62 0.15 145);"></div>
+          ระบบพร้อมใช้งาน
+        </div>
+        <div onClick="{{ goNewPermit }}" style="padding: 8px 14px; border-radius: 7px; background: oklch(0.52 0.16 265); color: #fff; font-size: 12.5px; font-weight: 500; white-space: nowrap; cursor: pointer;" style-hover="background: oklch(0.45 0.16 265);">+ ขอ Work Permit</div>
+      </div>
+    </div>
+
+    <div style="flex: 1; padding: 20px 24px 40px;">
+
+      <sc-if value="{{ isDash }}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+            <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 14px 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <div style="font-size: 11.5px; color: oklch(0.5 0.02 265); font-weight: 500;">{{ k.label }}</div>
+                  <div style="width: 8px; height: 8px; border-radius: 2px; background: {{ k.dot }};"></div>
+                </div>
+                <div style="display: flex; align-items: baseline; gap: 8px;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 500; letter-spacing: -0.02em; line-height: 1;">{{ k.value }}</div>
+                  <div style="font-size: 11px; color: {{ k.deltaColor }}; font-weight: 500;">{{ k.delta }}</div>
+                </div>
+                <div style="font-size: 11px; color: oklch(0.6 0.02 265); margin-top: 6px;">{{ k.note }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px;">
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 16px 18px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <div>
+                  <div style="font-size: 14px; font-weight: 600;">Permit ที่ออกในเดือนนี้ แยกตามประเภทงาน</div>
+                  <div style="font-size: 11.5px; color: oklch(0.56 0.02 265);">กันยายน 2569 — รวม 268 ใบ</div>
+                </div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: oklch(0.56 0.02 265);">MTD</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 11px;">
+                <sc-for list="{{ typeBars }}" as="b" hint-placeholder-count="6">
+                  <div style="display: grid; grid-template-columns: 150px minmax(0, 1fr) 54px; align-items: center; gap: 12px;">
+                    <div style="font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.label }}</div>
+                    <div style="height: 10px; border-radius: 5px; background: oklch(0.95 0.01 265); overflow: hidden;">
+                      <div style="height: 100%; border-radius: 5px; width: {{ b.pct }}; background: {{ b.color }};"></div>
+                    </div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: right; color: oklch(0.4 0.02 265);">{{ b.value }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 16px 18px;">
+              <div style="font-size: 14px; font-weight: 600; margin-bottom: 3px;">แจ้งเตือนที่ต้องดำเนินการ</div>
+              <div style="font-size: 11.5px; color: oklch(0.56 0.02 265); margin-bottom: 14px;">เรียงตามความเร่งด่วน</div>
+              <div style="display: flex; flex-direction: column; gap: 9px;">
+                <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="4">
+                  <div style="display: flex; gap: 10px; padding: 10px 11px; border-radius: 8px; background: {{ a.bg }}; border: 1px solid {{ a.bd }};">
+                    <div style="width: 3px; border-radius: 2px; background: {{ a.accent }}; flex: 0 0 3px;"></div>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="font-size: 12.5px; font-weight: 500; margin-bottom: 2px;">{{ a.title }}</div>
+                      <div style="font-size: 11.5px; color: oklch(0.48 0.02 265);">{{ a.detail }}</div>
+                    </div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: oklch(0.55 0.02 265); white-space: nowrap;">{{ a.time }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; overflow-x: auto;">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid oklch(0.93 0.01 265);">
+              <div style="flex: 1;">
+                <div style="font-size: 14px; font-weight: 600;">Permit ที่กำลังใช้งาน</div>
+                <div style="font-size: 11.5px; color: oklch(0.56 0.02 265);">อัปเดต 14 ก.ย. 2569 เวลา 09:42</div>
+              </div>
+              <sc-for list="{{ dashFilters }}" as="f" hint-placeholder-count="3">
+                <div style="padding: 5px 11px; border-radius: 20px; font-size: 11.5px; cursor: pointer; border: 1px solid {{ f.bd }}; background: {{ f.bg }}; color: {{ f.fg }};">{{ f.label }}</div>
+              </sc-for>
+            </div>
+            <div style="display: grid; grid-template-columns: 118px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr) 96px 104px 92px; min-width: 900px; gap: 12px; padding: 9px 18px; background: oklch(0.975 0.005 265); border-bottom: 1px solid oklch(0.93 0.01 265); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; color: oklch(0.5 0.02 265);">
+              <div>เลขที่</div><div>ประเภทงาน</div><div>ผู้รับเหมา</div><div>พื้นที่</div><div>ความเสี่ยง</div><div>ช่วงเวลา</div><div>สถานะ</div>
+            </div>
+            <sc-for list="{{ permitRows }}" as="r" hint-placeholder-count="6">
+              <div style="display: grid; grid-template-columns: 118px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr) 96px 104px 92px; min-width: 900px; gap: 12px; padding: 11px 18px; border-bottom: 1px solid oklch(0.95 0.008 265); align-items: center; cursor: pointer;" style-hover="background: oklch(0.98 0.008 265);">
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: oklch(0.45 0.1 265); font-weight: 500;">{{ r.id }}</div>
+                <div style="font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.type }}</div>
+                <div style="font-size: 12.5px; color: oklch(0.42 0.02 265); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.contractor }}</div>
+                <div style="font-size: 12.5px; color: oklch(0.5 0.02 265); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.area }}</div>
+                <div>
+                  <span style="font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; background: {{ r.riskBg }}; color: {{ r.riskFg }};">{{ r.risk }}</span>
+                </div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: oklch(0.5 0.02 265);">{{ r.time }}</div>
+                <div>
+                  <span style="font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; background: {{ r.stBg }}; color: {{ r.stFg }};">{{ r.status }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isContractors }}">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px;">
+            <sc-for list="{{ contractorKpis }}" as="k" hint-placeholder-count="4">
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 13px 15px;">
+                <div style="font-size: 11.5px; color: oklch(0.5 0.02 265); margin-bottom: 6px;">{{ k.label }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 500; line-height: 1;">{{ k.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; overflow-x: auto;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 13px 18px; border-bottom: 1px solid oklch(0.93 0.01 265);">
+              <div style="font-size: 14px; font-weight: 600; flex: 1;">ทะเบียนผู้รับเหมา</div>
+              <div style="padding: 6px 12px; border: 1px solid oklch(0.9 0.01 265); border-radius: 7px; font-size: 12px; cursor: pointer;" style-hover="background: oklch(0.97 0.01 265);">นำเข้าไฟล์ Excel</div>
+              <div style="padding: 6px 12px; border-radius: 7px; background: oklch(0.52 0.16 265); color: #fff; font-size: 12px; font-weight: 500; cursor: pointer;">+ เพิ่มผู้รับเหมา</div>
+            </div>
+            <div style="display: grid; grid-template-columns: minmax(0, 1.5fr) 130px 84px 118px 118px 110px; min-width: 850px; gap: 12px; padding: 9px 18px; background: oklch(0.975 0.005 265); border-bottom: 1px solid oklch(0.93 0.01 265); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; color: oklch(0.5 0.02 265);">
+              <div>บริษัทผู้รับเหมา</div><div>ประเภทงาน</div><div>พนักงาน</div><div>ประกันภัย</div><div>บัตรที่ใช้งาน</div><div>สถานะ</div>
+            </div>
+            <sc-for list="{{ contractors }}" as="c" hint-placeholder-count="7">
+              <div style="display: grid; grid-template-columns: minmax(0, 1.5fr) 130px 84px 118px 118px 110px; min-width: 850px; gap: 12px; padding: 11px 18px; border-bottom: 1px solid oklch(0.95 0.008 265); align-items: center;" style-hover="background: oklch(0.98 0.008 265);">
+                <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                  <div style="width: 28px; height: 28px; flex: 0 0 28px; border-radius: 6px; background: oklch(0.95 0.03 265); color: oklch(0.42 0.12 265); display: flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 600;">{{ c.initials }}</div>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ c.name }}</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: oklch(0.58 0.02 265);">{{ c.code }}</div>
+                  </div>
+                </div>
+                <div style="font-size: 12px; color: oklch(0.45 0.02 265);">{{ c.scope }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px;">{{ c.workers }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: {{ c.insColor }};">{{ c.insurance }}</div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: oklch(0.45 0.02 265);">{{ c.cards }}</div>
+                <div>
+                  <span style="font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; background: {{ c.stBg }}; color: {{ c.stFg }};">{{ c.status }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isBadges }}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start;">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; overflow-x: auto;">
+              <div style="display: flex; align-items: center; padding: 13px 18px; border-bottom: 1px solid oklch(0.93 0.01 265);">
+                <div style="flex: 1;">
+                  <div style="font-size: 14px; font-weight: 600;">คำขอออกบัตรผู้รับเหมา</div>
+                  <div style="font-size: 11.5px; color: oklch(0.56 0.02 265);">เลือกรายการเพื่อดูตัวอย่างบัตรและออกบัตร</div>
+                </div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 3px 9px; border-radius: 20px; background: oklch(0.96 0.03 70); color: oklch(0.45 0.12 70); border: 1px solid oklch(0.88 0.06 70);">รอดำเนินการ 9</div>
+              </div>
+              <div style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr) 108px 120px 96px; min-width: 720px; gap: 12px; padding: 9px 18px; background: oklch(0.975 0.005 265); border-bottom: 1px solid oklch(0.93 0.01 265); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; color: oklch(0.5 0.02 265);">
+                <div>ผู้ปฏิบัติงาน</div><div>บริษัท</div><div>อบรมผ่าน</div><div>ประเภทบัตร</div><div>สถานะ</div>
+              </div>
+              <sc-for list="{{ badgeQueue }}" as="b" hint-placeholder-count="6">
+                <div onClick="{{ b.pick }}" style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr) 108px 120px 96px; min-width: 720px; gap: 12px; padding: 11px 18px; border-bottom: 1px solid oklch(0.95 0.008 265); align-items: center; cursor: pointer; background: {{ b.rowBg }}; border-left: 3px solid {{ b.rowBar }};" style-hover="background: oklch(0.97 0.012 265);">
+                  <div style="min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.name }}</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: oklch(0.58 0.02 265);">{{ b.idNo }}</div>
+                  </div>
+                  <div style="font-size: 12px; color: oklch(0.45 0.02 265); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.company }}</div>
+                  <div>
+                    <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: {{ b.trBg }}; color: {{ b.trFg }}; font-weight: 500;">{{ b.training }}</span>
+                  </div>
+                  <div style="font-size: 12px; color: oklch(0.45 0.02 265);">{{ b.kind }}</div>
+                  <div>
+                    <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: {{ b.stBg }}; color: {{ b.stFg }}; font-weight: 500;">{{ b.status }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 16px 18px;">
+              <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">เงื่อนไขการออกบัตร</div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                <sc-for list="{{ badgeChecks }}" as="c" hint-placeholder-count="4">
+                  <div style="display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-radius: 8px; background: {{ c.bg }}; border: 1px solid {{ c.bd }};">
+                    <div style="width: 16px; height: 16px; flex: 0 0 16px; border-radius: 4px; background: {{ c.accent }}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">{{ c.mark }}</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="font-size: 12.5px; font-weight: 500;">{{ c.label }}</div>
+                      <div style="font-size: 11px; color: oklch(0.5 0.02 265);">{{ c.detail }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; position: sticky; top: 88px;">
+            <div style="border-radius: 12px; overflow: hidden; border: 1px solid oklch(0.88 0.01 265); background: #fff; box-shadow: 0 8px 24px -12px oklch(0.3 0.05 265 / 0.28);">
+              <div style="background: oklch(0.22 0.04 265); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="color: #fff;">
+                  <div style="font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em;">บัตรผู้รับเหมา</div>
+                  <div style="font-size: 9.5px; color: oklch(0.74 0.03 265); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.06em;">CONTRACTOR ID CARD</div>
+                </div>
+                <div style="padding: 3px 8px; border-radius: 4px; background: {{ card.tierBg }}; color: {{ card.tierFg }}; font-size: 10px; font-weight: 600;">{{ card.tier }}</div>
+              </div>
+              <div style="padding: 14px; display: flex; gap: 12px;">
+                <div style="width: 82px; height: 100px; flex: 0 0 82px; border-radius: 6px; border: 1px solid oklch(0.88 0.01 265); background: repeating-linear-gradient(135deg, oklch(0.95 0.01 265) 0 6px, oklch(0.91 0.012 265) 6px 12px); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: oklch(0.45 0.02 265); letter-spacing: 0.04em;">PHOTO</div>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">{{ card.name }}</div>
+                  <div style="font-size: 11.5px; color: oklch(0.5 0.02 265); margin-bottom: 8px;">{{ card.role }}</div>
+                  <div style="font-size: 11px; color: oklch(0.45 0.02 265); line-height: 1.65;">
+                    <div>บริษัท: {{ card.company }}</div>
+                    <div>เลขบัตร: <span style="font-family: 'IBM Plex Mono', monospace;">{{ card.no }}</span></div>
+                    <div>หมดอายุ: <span style="font-family: 'IBM Plex Mono', monospace;">{{ card.expiry }}</span></div>
+                  </div>
+                </div>
+              </div>
+              <div style="padding: 0 14px 12px;">
+                <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: oklch(0.55 0.02 265); margin-bottom: 6px;">สิทธิ์การเข้าทำงาน</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                  <sc-for list="{{ card.perms }}" as="p" hint-placeholder-count="4">
+                    <div style="font-size: 10.5px; padding: 3px 8px; border-radius: 4px; background: oklch(0.955 0.02 265); border: 1px solid oklch(0.9 0.02 265); color: oklch(0.36 0.06 265);">{{ p.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px dashed oklch(0.88 0.01 265); background: oklch(0.985 0.004 265);">
+                <div style="width: 52px; height: 52px; flex: 0 0 52px; background: repeating-conic-gradient(oklch(0.25 0.03 265) 0% 25%, #fff 0% 50%) 0 0 / 9px 9px; border-radius: 3px;"></div>
+                <div style="font-size: 10.5px; color: oklch(0.5 0.02 265); line-height: 1.5;">สแกนเพื่อตรวจสอบสถานะบัตรและ<br />ประวัติการอบรมที่จุดคัดกรอง</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <div style="flex: 1; text-align: center; padding: 9px; border-radius: 8px; background: oklch(0.52 0.16 265); color: #fff; font-size: 12.5px; font-weight: 500; cursor: pointer;" style-hover="background: oklch(0.45 0.16 265);">ออกบัตร</div>
+              <div style="padding: 9px 14px; border-radius: 8px; border: 1px solid oklch(0.9 0.01 265); font-size: 12.5px; cursor: pointer; background: #fff;" style-hover="background: oklch(0.97 0.01 265);">พิมพ์</div>
+            </div>
+            <div style="font-size: 11px; color: oklch(0.55 0.02 265); text-align: center;">บัตรมีอายุ 1 ปี และผูกกับผลการอบรมล่าสุด</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isTraining }}">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 12px;">
+            <sc-for list="{{ courses }}" as="c" hint-placeholder-count="4">
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 14px 15px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+                  <div style="font-size: 13px; font-weight: 600; line-height: 1.35;">{{ c.name }}</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: oklch(0.96 0.01 265); color: oklch(0.45 0.02 265); white-space: nowrap;">{{ c.code }}</div>
+                </div>
+                <div style="font-size: 11.5px; color: oklch(0.52 0.02 265);">{{ c.detail }}</div>
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: oklch(0.5 0.02 265); margin-bottom: 5px;">
+                    <span>อัตราผ่าน</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; color: oklch(0.3 0.02 265); font-weight: 500;">{{ c.rate }}</span>
+                  </div>
+                  <div style="height: 7px; border-radius: 4px; background: oklch(0.95 0.01 265); overflow: hidden;">
+                    <div style="height: 100%; width: {{ c.rate }}; background: {{ c.color }}; border-radius: 4px;"></div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: oklch(0.55 0.02 265); border-top: 1px solid oklch(0.95 0.008 265); padding-top: 9px;">
+                  <span>ผู้เข้าอบรม {{ c.taken }} คน</span>
+                  <span style="color: oklch(0.45 0.12 265); font-weight: 500; cursor: pointer;">จัดการข้อสอบ</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; align-items: start;">
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; overflow-x: auto;">
+              <div style="display: flex; align-items: center; padding: 13px 18px; border-bottom: 1px solid oklch(0.93 0.01 265);">
+                <div style="flex: 1;">
+                  <div style="font-size: 14px; font-weight: 600;">ผลการทดสอบล่าสุด</div>
+                  <div style="font-size: 11.5px; color: oklch(0.56 0.02 265);">เกณฑ์ผ่าน 80% — ทดสอบใหม่ได้ 2 ครั้ง</div>
+                </div>
+                <div style="padding: 6px 12px; border-radius: 7px; border: 1px solid oklch(0.9 0.01 265); font-size: 12px; cursor: pointer;" style-hover="background: oklch(0.97 0.01 265);">ส่งออกผล</div>
+              </div>
+              <div style="display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.2fr) 100px 72px 96px; min-width: 680px; gap: 12px; padding: 9px 18px; background: oklch(0.975 0.005 265); border-bottom: 1px solid oklch(0.93 0.01 265); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; color: oklch(0.5 0.02 265);">
+                <div>ผู้เข้าทดสอบ</div><div>หลักสูตร</div><div>วันที่</div><div>คะแนน</div><div>ผล</div>
+              </div>
+              <sc-for list="{{ examRows }}" as="e" hint-placeholder-count="7">
+                <div style="display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.2fr) 100px 72px 96px; min-width: 680px; gap: 12px; padding: 11px 18px; border-bottom: 1px solid oklch(0.95 0.008 265); align-items: center;" style-hover="background: oklch(0.98 0.008 265);">
+                  <div style="min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ e.name }}</div>
+                    <div style="font-size: 10.5px; color: oklch(0.58 0.02 265);">{{ e.company }}</div>
+                  </div>
+                  <div style="font-size: 12px; color: oklch(0.45 0.02 265); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ e.course }}</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: oklch(0.5 0.02 265);">{{ e.date }}</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; font-weight: 500; color: {{ e.scoreColor }};">{{ e.score }}</div>
+                  <div>
+                    <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; background: {{ e.resBg }}; color: {{ e.resFg }};">{{ e.result }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 16px 18px;">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 3px;">
+                <div style="font-size: 14px; font-weight: 600;">วิดีโอบทเรียน (บังคับดูให้ครบ)</div>
+                <div style="font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 4px; white-space: nowrap; background: {{ vidBadgeBg }}; color: {{ vidBadgeFg }};">{{ vidBadge }}</div>
+              </div>
+              <div style="font-size: 11.5px; color: oklch(0.56 0.02 265); margin-bottom: 14px;">ความปลอดภัยพื้นฐานสำหรับผู้รับเหมา (TR-101) — ตอนที่ 1</div>
+              <div onClick="{{ togglePlay }}" style="aspect-ratio: 16 / 9; border-radius: 8px; border: 1px solid oklch(0.88 0.01 265); background: repeating-linear-gradient(135deg, oklch(0.29 0.03 265) 0 8px, oklch(0.25 0.03 265) 8px 16px); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;">
+                <div style="width: 46px; height: 46px; border-radius: 50%; background: oklch(0.98 0.005 265 / 0.92); display: flex; align-items: center; justify-content: center; font-size: 15px; color: oklch(0.3 0.04 265);">{{ playGlyph }}</div>
+                <div style="position: absolute; left: 10px; bottom: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: oklch(0.86 0.02 265); letter-spacing: 0.04em;">TR-101 · SAFETY INDUCTION</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+                <div style="flex: 1; height: 6px; border-radius: 3px; background: oklch(0.94 0.01 265); overflow: hidden;">
+                  <div style="height: 100%; width: {{ videoPct }}; background: {{ videoBarColor }}; border-radius: 3px;"></div>
+                </div>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: oklch(0.45 0.02 265); white-space: nowrap;">{{ videoTime }}</div>
+              </div>
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-top: 9px;">
+                <div style="font-size: 11.5px; color: oklch(0.5 0.02 265); line-height: 1.5;">{{ videoNote }}</div>
+                <div onClick="{{ finishVideo }}" style="font-size: 11px; font-weight: 500; color: oklch(0.45 0.12 265); white-space: nowrap; cursor: pointer; padding-top: 1px;" style-hover="text-decoration: underline;">{{ demoSkipLabel }}</div>
+              </div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 16px 18px;">
+              <div style="font-size: 14px; font-weight: 600; margin-bottom: 3px;">แบบทดสอบออนไลน์</div>
+              <div style="font-size: 11.5px; color: oklch(0.56 0.02 265); margin-bottom: 14px;">{{ examSub }}</div>
+              <div style="height: 5px; border-radius: 3px; background: oklch(0.95 0.01 265); overflow: hidden; margin-bottom: 16px;">
+                <div style="height: 100%; width: {{ examProgress }}; background: oklch(0.52 0.16 265); border-radius: 3px;"></div>
+              </div>
+              <sc-if value="{{ examLocked }}" hint-placeholder-val="{{ true }}">
+                <div style="border: 1px dashed oklch(0.88 0.04 70); background: oklch(0.975 0.03 70); border-radius: 9px; padding: 18px 16px; text-align: center;">
+                  <div style="width: 34px; height: 34px; margin: 0 auto 10px; border-radius: 9px; background: oklch(0.93 0.06 70); color: oklch(0.42 0.11 70); display: flex; align-items: center; justify-content: center; font-size: 15px;">◎</div>
+                  <div style="font-size: 13px; font-weight: 600; margin-bottom: 5px;">ยังไม่สามารถทำแบบทดสอบได้</div>
+                  <div style="font-size: 11.5px; color: oklch(0.47 0.04 70); line-height: 1.55;">ต้องดูวิดีโอบทเรียนให้ครบ 100% ก่อน<br />ดูแล้ว {{ videoPct }} — เหลืออีก {{ videoRemain }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ examUnlocked }}">
+              <div style="font-size: 13.5px; font-weight: 500; line-height: 1.6; margin-bottom: 14px;">ก่อนเริ่มงานที่มีความร้อนและประกายไฟ (Hot Work) ผู้ปฏิบัติงานต้องดำเนินการข้อใดก่อนเป็นอันดับแรก</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <sc-for list="{{ quizOptions }}" as="q" hint-placeholder-count="4">
+                  <div onClick="{{ q.pick }}" style="display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; border-radius: 8px; cursor: pointer; border: 1px solid {{ q.bd }}; background: {{ q.bg }};" style-hover="border-color: oklch(0.72 0.08 265);">
+                    <div style="width: 19px; height: 19px; flex: 0 0 19px; border-radius: 50%; border: 1.5px solid {{ q.markBd }}; background: {{ q.markBg }}; color: {{ q.markFg }}; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; font-weight: 600;">{{ q.key }}</div>
+                    <div style="font-size: 12.5px; line-height: 1.5;">{{ q.text }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <div style="flex: 1; text-align: center; padding: 9px; border-radius: 8px; background: oklch(0.52 0.16 265); color: #fff; font-size: 12.5px; font-weight: 500; cursor: pointer;" style-hover="background: oklch(0.45 0.16 265);">ข้อถัดไป</div>
+                <div style="padding: 9px 14px; border-radius: 8px; border: 1px solid oklch(0.9 0.01 265); font-size: 12.5px; cursor: pointer;" style-hover="background: oklch(0.97 0.01 265);">ข้ามข้อนี้</div>
+              </div>
+              </sc-if>
+            </div>
+
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isPermits }}">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 14px 18px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 8px;">
+              <sc-for list="{{ steps }}" as="s" hint-placeholder-count="4">
+                <div onClick="{{ s.go }}" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; background: {{ s.bg }}; border: 1px solid {{ s.bd }};">
+                  <div style="width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; background: {{ s.numBg }}; color: {{ s.numFg }}; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600;">{{ s.n }}</div>
+                  <div style="min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ s.label }}</div>
+                    <div style="font-size: 10.5px; color: oklch(0.55 0.02 265); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ s.hint }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <sc-if value="{{ step1 }}" hint-placeholder-val="{{ true }}">
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 18px;">
+              <div style="font-size: 14px; font-weight: 600; margin-bottom: 3px;">เลือกประเภทงานที่ขออนุญาต</div>
+              <div style="font-size: 11.5px; color: oklch(0.56 0.02 265); margin-bottom: 16px;">เลือกได้มากกว่าหนึ่งประเภท ระบบจะรวมแบบฟอร์มควบคุมให้อัตโนมัติ</div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(225px, 1fr)); gap: 10px;">
+                <sc-for list="{{ permitTypes }}" as="t" hint-placeholder-count="6">
+                  <div onClick="{{ t.pick }}" style="padding: 14px 15px; border-radius: 10px; cursor: pointer; border: 1px solid {{ t.bd }}; background: {{ t.bg }};" style-hover="border-color: oklch(0.68 0.1 265);">
+                    <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 7px;">
+                      <div style="width: 10px; height: 10px; border-radius: 3px; background: {{ t.dot }};"></div>
+                      <div style="font-size: 13px; font-weight: 600;">{{ t.name }}</div>
+                    </div>
+                    <div style="font-size: 11.5px; color: oklch(0.5 0.02 265); line-height: 1.55; margin-bottom: 9px;">{{ t.detail }}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <span style="font-size: 10.5px; font-weight: 500; padding: 2px 7px; border-radius: 4px; background: {{ t.lvBg }}; color: {{ t.lvFg }};">{{ t.level }}</span>
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: oklch(0.58 0.02 265);">{{ t.code }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step2 }}">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start;">
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 18px;">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 16px;">รายละเอียดงาน</div>
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+                  <sc-for list="{{ formFields }}" as="f" hint-placeholder-count="8">
+                    <div style="grid-column: {{ f.span }};">
+                      <div style="font-size: 11.5px; font-weight: 500; color: oklch(0.42 0.02 265); margin-bottom: 5px;">{{ f.label }}</div>
+                      <div style="border: 1px solid oklch(0.9 0.01 265); border-radius: 7px; padding: 9px 11px; font-size: 12.5px; background: oklch(0.99 0.003 265); color: oklch(0.35 0.02 265); min-height: 19px;">{{ f.value }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 18px;">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">เอกสารแนบที่กำหนด</div>
+                <div style="display: flex; flex-direction: column; gap: 9px;">
+                  <sc-for list="{{ attachments }}" as="a" hint-placeholder-count="5">
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 1px solid {{ a.bd }}; background: {{ a.bg }};">
+                      <div style="width: 16px; height: 16px; flex: 0 0 16px; border-radius: 4px; background: {{ a.accent }}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">{{ a.mark }}</div>
+                      <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 12.5px; font-weight: 500;">{{ a.label }}</div>
+                        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: oklch(0.55 0.02 265); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ a.file }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top: 12px; border: 1px dashed oklch(0.85 0.01 265); border-radius: 8px; padding: 16px; text-align: center; background: oklch(0.985 0.004 265); cursor: pointer;" style-hover="border-color: oklch(0.6 0.12 265);">
+                  <div style="font-size: 12.5px; font-weight: 500; color: oklch(0.42 0.1 265);">ลากไฟล์มาวาง หรือเลือกไฟล์</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: oklch(0.58 0.02 265); margin-top: 4px;">PDF, JPG — ไม่เกิน 10 MB</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step3 }}">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start;">
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 18px;">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 3px;">การชี้บ่งอันตรายและมาตรการควบคุม (JSA)</div>
+                <div style="font-size: 11.5px; color: oklch(0.56 0.02 265); margin-bottom: 14px;">ระบบเสนอรายการตามประเภทงานที่เลือก</div>
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 78px; gap: 12px; padding: 8px 0; border-bottom: 1px solid oklch(0.93 0.01 265); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; color: oklch(0.5 0.02 265);">
+                  <div>อันตราย</div><div>มาตรการควบคุม</div><div>ระดับ</div>
+                </div>
+                <sc-for list="{{ hazards }}" as="h" hint-placeholder-count="5">
+                  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) 78px; gap: 12px; padding: 11px 0; border-bottom: 1px solid oklch(0.96 0.008 265); align-items: center;">
+                    <div style="font-size: 12.5px; font-weight: 500;">{{ h.hazard }}</div>
+                    <div style="font-size: 12px; color: oklch(0.45 0.02 265); line-height: 1.5;">{{ h.control }}</div>
+                    <div>
+                      <span style="font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; background: {{ h.lvBg }}; color: {{ h.lvFg }};">{{ h.level }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+                <div style="margin-top: 14px; padding: 12px 14px; border-radius: 8px; background: oklch(0.97 0.02 265); border: 1px solid oklch(0.91 0.03 265);">
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="font-size: 12.5px; font-weight: 500;">คะแนนความเสี่ยงรวมหลังมาตรการควบคุม</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: oklch(0.45 0.12 70);">12 — ปานกลาง</div>
+                  </div>
+                </div>
+              </div>
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 18px;">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">อุปกรณ์คุ้มครองความปลอดภัยส่วนบุคคล</div>
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+                  <sc-for list="{{ ppe }}" as="p" hint-placeholder-count="8">
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 7px; border: 1px solid {{ p.bd }}; background: {{ p.bg }};">
+                      <div style="width: 15px; height: 15px; flex: 0 0 15px; border-radius: 4px; background: {{ p.accent }}; border: 1px solid {{ p.accentBd }}; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700;">{{ p.mark }}</div>
+                      <div style="font-size: 12px;">{{ p.label }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top: 14px; padding: 12px 14px; border-radius: 8px; background: oklch(0.97 0.03 70); border: 1px solid oklch(0.9 0.06 70);">
+                  <div style="font-size: 12px; font-weight: 600; color: oklch(0.42 0.1 70); margin-bottom: 4px;">ต้องมีผู้เฝ้าระวังไฟ (Fire Watch)</div>
+                  <div style="font-size: 11.5px; color: oklch(0.45 0.04 70); line-height: 1.5;">งานตัด-เชื่อมต้องมีผู้เฝ้าระวังตลอดการทำงาน และเฝ้าต่อเนื่องอีก 30 นาทีหลังเลิกงาน</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step4 }}">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start;">
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; overflow-x: auto;">
+                <div style="padding: 14px 18px; border-bottom: 1px solid oklch(0.93 0.01 265);">
+                  <div style="font-size: 14px; font-weight: 600;">ผู้ปฏิบัติงานในใบอนุญาต</div>
+                  <div style="font-size: 11.5px; color: oklch(0.56 0.02 265);">ระบบตรวจสอบบัตรและผลอบรมอัตโนมัติ</div>
+                </div>
+                <div style="display: grid; grid-template-columns: minmax(0, 1.2fr) 118px minmax(0, 1fr) 104px; min-width: 620px; gap: 12px; padding: 9px 18px; background: oklch(0.975 0.005 265); border-bottom: 1px solid oklch(0.93 0.01 265); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; color: oklch(0.5 0.02 265);">
+                  <div>ชื่อ</div><div>เลขบัตร</div><div>หลักสูตรที่ผ่าน</div><div>ผลตรวจสอบ</div>
+                </div>
+                <sc-for list="{{ workers }}" as="w" hint-placeholder-count="5">
+                  <div style="display: grid; grid-template-columns: minmax(0, 1.2fr) 118px minmax(0, 1fr) 104px; min-width: 620px; gap: 12px; padding: 11px 18px; border-bottom: 1px solid oklch(0.95 0.008 265); align-items: center;">
+                    <div style="font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ w.name }}</div>
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: oklch(0.5 0.02 265);">{{ w.card }}</div>
+                    <div style="font-size: 11.5px; color: oklch(0.48 0.02 265); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ w.courses }}</div>
+                    <div>
+                      <span style="font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 4px; background: {{ w.stBg }}; color: {{ w.stFg }};">{{ w.status }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 18px; position: sticky; top: 88px;">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 14px;">ลำดับการอนุมัติ</div>
+                <div style="display: flex; flex-direction: column;">
+                  <sc-for list="{{ approvals }}" as="a" hint-placeholder-count="4">
+                    <div style="display: flex; gap: 12px;">
+                      <div style="display: flex; flex-direction: column; align-items: center; flex: 0 0 22px;">
+                        <div style="width: 22px; height: 22px; border-radius: 50%; background: {{ a.dotBg }}; border: 2px solid {{ a.dotBd }}; color: {{ a.dotFg }}; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">{{ a.mark }}</div>
+                        <div style="width: 2px; flex: 1; background: {{ a.lineColor }}; min-height: {{ a.lineH }};"></div>
+                      </div>
+                      <div style="padding-bottom: 16px; flex: 1; min-width: 0;">
+                        <div style="font-size: 12.5px; font-weight: 600;">{{ a.role }}</div>
+                        <div style="font-size: 11.5px; color: oklch(0.5 0.02 265);">{{ a.person }}</div>
+                        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: {{ a.timeColor }}; margin-top: 3px;">{{ a.time }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="padding: 10px 12px; border-radius: 8px; background: oklch(0.985 0.004 265); border: 1px solid oklch(0.93 0.01 265); font-size: 11.5px; color: oklch(0.48 0.02 265); line-height: 1.55; margin-bottom: 12px;">ใบอนุญาตมีผล 12 ชม. นับจากเวลาอนุมัติ และต้องปิดงานพร้อมตรวจพื้นที่ก่อนหมดอายุ</div>
+                <div style="text-align: center; padding: 10px; border-radius: 8px; background: oklch(0.52 0.16 265); color: #fff; font-size: 13px; font-weight: 500; cursor: pointer;" style-hover="background: oklch(0.45 0.16 265);">ส่งขออนุมัติ</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div onClick="{{ prevStep }}" style="padding: 9px 16px; border-radius: 8px; border: 1px solid oklch(0.9 0.01 265); background: #fff; font-size: 12.5px; cursor: pointer;" style-hover="background: oklch(0.97 0.01 265);">ย้อนกลับ</div>
+            <div onClick="{{ nextStep }}" style="padding: 9px 18px; border-radius: 8px; background: oklch(0.22 0.04 265); color: #fff; font-size: 12.5px; font-weight: 500; cursor: pointer;" style-hover="background: oklch(0.3 0.05 265);">ขั้นตอนต่อไป</div>
+            <div style="font-size: 11.5px; color: oklch(0.58 0.02 265);">บันทึกฉบับร่างอัตโนมัติ — <span style="font-family: 'IBM Plex Mono', monospace;">WP-2569-0912-014</span></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isReports }}">
+        <div style="display: flex; flex-direction: column; gap: 16px; max-width: 1180px;">
+          <div style="background: oklch(0.22 0.04 265); border-radius: 12px; padding: 22px 24px; color: #fff; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.12em; color: oklch(0.76 0.04 265); margin-bottom: 6px;">MONTHLY SAFETY REPORT</div>
+              <div style="font-size: 22px; font-weight: 600; letter-spacing: -0.01em;">รายงานสรุปงานความปลอดภัย ประจำเดือนสิงหาคม 2569</div>
+              <div style="font-size: 12.5px; color: oklch(0.8 0.03 265); margin-top: 6px;">จัดทำโดยแผนกความปลอดภัย อาชีวอนามัย และสภาพแวดล้อมในการทำงาน</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <div style="padding: 8px 14px; border-radius: 7px; background: oklch(0.32 0.05 265); font-size: 12.5px; cursor: pointer;" style-hover="background: oklch(0.38 0.06 265);">เลือกเดือน</div>
+              <div style="padding: 8px 14px; border-radius: 7px; background: #fff; color: oklch(0.25 0.04 265); font-size: 12.5px; font-weight: 500; cursor: pointer;">ส่งออก PDF</div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px;">
+            <sc-for list="{{ reportStats }}" as="s" hint-placeholder-count="5">
+              <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 14px 16px;">
+                <div style="font-size: 11.5px; color: oklch(0.5 0.02 265); margin-bottom: 7px;">{{ s.label }}</div>
+                <div style="display: flex; align-items: baseline; gap: 7px;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 25px; font-weight: 500; line-height: 1;">{{ s.value }}</div>
+                  <div style="font-size: 11px; font-weight: 500; color: {{ s.deltaColor }};">{{ s.delta }}</div>
+                </div>
+                <div style="font-size: 11px; color: oklch(0.6 0.02 265); margin-top: 6px;">{{ s.note }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; align-items: start;">
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 16px 18px;">
+              <div style="font-size: 14px; font-weight: 600; margin-bottom: 2px;">จำนวน Permit และเหตุการณ์ รายเดือน</div>
+              <div style="font-size: 11.5px; color: oklch(0.56 0.02 265); margin-bottom: 18px;">มี.ค. – ส.ค. 2569</div>
+              <div style="display: flex; align-items: flex-end; gap: 14px; height: 172px; padding-bottom: 22px; border-bottom: 1px solid oklch(0.92 0.01 265); position: relative;">
+                <sc-for list="{{ monthBars }}" as="m" hint-placeholder-count="6">
+                  <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end;">
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: oklch(0.5 0.02 265);">{{ m.value }}</div>
+                    <div style="width: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 3px; height: {{ m.h }};">
+                      <div style="flex: 1; max-width: 26px; height: 100%; background: oklch(0.52 0.16 265); border-radius: 4px 4px 0 0;"></div>
+                      <div style="flex: 0 0 8px; height: {{ m.incH }}; background: oklch(0.66 0.16 40); border-radius: 3px 3px 0 0;"></div>
+                    </div>
+                    <div style="font-size: 11px; color: oklch(0.5 0.02 265); position: absolute; bottom: 0;">{{ m.label }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display: flex; gap: 18px; margin-top: 12px;">
+                <div style="display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: oklch(0.48 0.02 265);">
+                  <div style="width: 10px; height: 10px; border-radius: 3px; background: oklch(0.52 0.16 265);"></div> Permit ที่ออก
+                </div>
+                <div style="display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: oklch(0.48 0.02 265);">
+                  <div style="width: 10px; height: 10px; border-radius: 3px; background: oklch(0.66 0.16 40);"></div> เหตุการณ์ / ข้อบกพร่อง
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 16px 18px;">
+              <div style="font-size: 14px; font-weight: 600; margin-bottom: 14px;">ข้อบกพร่องที่พบบ่อยจากการตรวจพื้นที่</div>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <sc-for list="{{ findings }}" as="f" hint-placeholder-count="5">
+                  <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                      <div style="font-size: 12.5px;">{{ f.label }}</div>
+                      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: oklch(0.45 0.02 265);">{{ f.value }}</div>
+                    </div>
+                    <div style="height: 7px; border-radius: 4px; background: oklch(0.95 0.01 265); overflow: hidden;">
+                      <div style="height: 100%; width: {{ f.pct }}; background: {{ f.color }}; border-radius: 4px;"></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; align-items: start;">
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; overflow-x: auto;">
+              <div style="padding: 13px 18px; border-bottom: 1px solid oklch(0.93 0.01 265); font-size: 14px; font-weight: 600;">ผลการปฏิบัติของผู้รับเหมา 5 อันดับ</div>
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) 74px 74px 86px; min-width: 460px; gap: 10px; padding: 9px 18px; background: oklch(0.975 0.005 265); border-bottom: 1px solid oklch(0.93 0.01 265); font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; white-space: nowrap; color: oklch(0.5 0.02 265);">
+                <div>ผู้รับเหมา</div><div>Permit</div><div>ข้อบกพร่อง</div><div>คะแนน</div>
+              </div>
+              <sc-for list="{{ ranking }}" as="r" hint-placeholder-count="5">
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 74px 74px 86px; min-width: 460px; gap: 10px; padding: 11px 18px; border-bottom: 1px solid oklch(0.95 0.008 265); align-items: center;">
+                  <div style="font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.name }}</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: oklch(0.45 0.02 265);">{{ r.permits }}</div>
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: oklch(0.45 0.02 265);">{{ r.findings }}</div>
+                  <div>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 500; padding: 2px 8px; border-radius: 4px; background: {{ r.scBg }}; color: {{ r.scFg }};">{{ r.score }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="background: #fff; border: 1px solid oklch(0.91 0.01 265); border-radius: 10px; padding: 16px 18px;">
+              <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">ข้อเสนอต่อผู้บริหาร</div>
+              <div style="display: flex; flex-direction: column; gap: 11px;">
+                <sc-for list="{{ recommendations }}" as="r" hint-placeholder-count="4">
+                  <div style="display: flex; gap: 11px; padding-bottom: 11px; border-bottom: 1px solid oklch(0.96 0.008 265);">
+                    <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: oklch(0.5 0.12 265); flex: 0 0 18px; padding-top: 1px;">{{ r.n }}</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="font-size: 12.5px; font-weight: 500; margin-bottom: 3px;">{{ r.title }}</div>
+                      <div style="font-size: 11.5px; color: oklch(0.48 0.02 265); line-height: 1.55;">{{ r.detail }}</div>
+                    </div>
+                    <div style="font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 4px; height: fit-content; background: {{ r.pBg }}; color: {{ r.pFg }}; white-space: nowrap;">{{ r.priority }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dashboard&quot;,&quot;contractors&quot;,&quot;badges&quot;,&quot;training&quot;,&quot;permits&quot;,&quot;reports&quot;],&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;การแสดงผล&quot;},&quot;showEnglishLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;การแสดงผล&quot;}}">
+const C = {
+  ink: 'oklch(0.24 0.03 265)', mut: 'oklch(0.52 0.02 265)',
+  acc: 'oklch(0.52 0.16 265)', accBg: 'oklch(0.96 0.025 265)', accBd: 'oklch(0.86 0.05 265)', accFg: 'oklch(0.38 0.13 265)',
+  grn: 'oklch(0.6 0.14 145)', grnBg: 'oklch(0.96 0.03 145)', grnBd: 'oklch(0.88 0.06 145)', grnFg: 'oklch(0.4 0.1 145)',
+  amb: 'oklch(0.74 0.15 70)', ambBg: 'oklch(0.97 0.04 70)', ambBd: 'oklch(0.89 0.07 70)', ambFg: 'oklch(0.44 0.11 70)',
+  red: 'oklch(0.6 0.18 28)', redBg: 'oklch(0.96 0.03 28)', redBd: 'oklch(0.89 0.06 28)', redFg: 'oklch(0.46 0.15 28)',
+  gry: 'oklch(0.7 0.02 265)', gryBg: 'oklch(0.965 0.006 265)', gryBd: 'oklch(0.92 0.01 265)', gryFg: 'oklch(0.45 0.02 265)'
+};
+const TONE = { ok: ['grn'], warn: ['amb'], bad: ['red'], info: ['acc'], flat: ['gry'] };
+function tone(t) { const k = (TONE[t] || TONE.flat)[0]; return { bg: C[k + 'Bg'], bd: C[k + 'Bd'], fg: C[k + 'Fg'], accent: C[k] }; }
+
+class Component extends DCLogic {
+  state = { screen: null, badge: 0, step: 1, type: 0, quiz: null, vidSec: 0, playing: false };
+  VID_LEN = 760;
+
+  componentWillUnmount() { clearInterval(this._t); }
+
+  tick = () => {
+    this.setState(s => {
+      const next = Math.min(this.VID_LEN, s.vidSec + 10);
+      if (next >= this.VID_LEN) { clearInterval(this._t); this._t = null; return { vidSec: next, playing: false }; }
+      return { vidSec: next };
+    });
+  };
+
+  togglePlay = () => {
+    if (this.state.vidSec >= this.VID_LEN) return;
+    if (this.state.playing) { clearInterval(this._t); this._t = null; this.setState({ playing: false }); }
+    else { clearInterval(this._t); this._t = setInterval(this.tick, 700); this.setState({ playing: true }); }
+  };
+
+  finishVideo = () => { clearInterval(this._t); this._t = null; this.setState({ vidSec: this.VID_LEN, playing: false }); };
+
+  fmt(sec) { const m = Math.floor(sec / 60), s = Math.round(sec % 60); return m + ':' + String(s).padStart(2, '0'); }
+
+  get screen() { return this.state.screen || this.props.defaultScreen || 'dashboard'; }
+  go = (id) => () => this.setState({ screen: id });
+
+  renderVals() {
+    const s = this.screen;
+    const bilingual = this.props.showEnglishLabels ?? true;
+    const navDef = [
+      ['dashboard', 'แดชบอร์ด', 'Dashboard', ''],
+      ['contractors', 'ผู้รับเหมา', 'Contractors', '42'],
+      ['badges', 'บัตรผู้รับเหมา', 'ID Badges', '9'],
+      ['training', 'อบรม & ทดสอบ', 'Training & Exam', ''],
+      ['permits', 'ขอ Work Permit', 'Permit Request', '6'],
+      ['reports', 'รายงานผู้บริหาร', 'Reports', '']
+    ];
+    const nav = navDef.map(([id, label, en, count]) => {
+      const on = s === id;
+      return { id, label, en, count, go: this.go(id), bg: on ? 'oklch(0.3 0.05 265)' : 'transparent',
+        fg: on ? '#fff' : 'oklch(0.86 0.02 265)', bar: on ? 'oklch(0.68 0.17 265)' : 'transparent' };
+    });
+    const meta = {
+      dashboard: ['ภาพรวมความปลอดภัยประจำวัน', 'ข้อมูลล่าสุด 14 กันยายน 2569 — โรงงานระยอง'],
+      contractors: ['ทะเบียนผู้รับเหมา', 'ข้อมูลบริษัท พนักงาน ประกันภัย และสถานะการขึ้นทะเบียน'],
+      badges: ['การออกบัตรผู้รับเหมา', 'ตรวจสอบคุณสมบัติ ออกบัตร และควบคุมอายุบัตร'],
+      training: ['การอบรมและทดสอบ', 'หลักสูตรความปลอดภัย ผลสอบ และอายุใบรับรอง'],
+      permits: ['ขอใบอนุญาตทำงาน', 'แบบฟอร์ม 4 ขั้นตอน พร้อมการชี้บ่งอันตรายและลำดับอนุมัติ'],
+      reports: ['รายงานสรุปผู้บริหาร', 'สรุปรายเดือน พร้อมแนวโน้มและข้อเสนอเชิงนโยบาย']
+    }[s];
+
+    const badgeData = [
+      ['นายวิชัย ทองสุข', '1-3299-xxxxx-42', 'บจก. เอส.พี. เอ็นจิเนียริ่ง', 'ผ่าน 3/3', 'ok', 'ผู้ปฏิบัติงานประจำ', 'พร้อมออกบัตร', 'ok', 'ระดับ 2', 'CT-2569-0418', '31 ส.ค. 2570', 'ช่างเชื่อม', ['งานความร้อน', 'งานที่สูง', 'งานไฟฟ้าแรงต่ำ', 'พื้นที่ผลิต A-C']],
+      ['นายสมพงษ์ แก้วมณี', '1-1015-xxxxx-08', 'บจก. ไทยคอนสตรัคชั่น', 'ผ่าน 2/3', 'warn', 'ผู้ปฏิบัติงานชั่วคราว', 'รออบรมเพิ่ม', 'warn', 'ระดับ 1', 'CT-2569-0455', '30 ก.ย. 2569', 'ช่างทั่วไป', ['งานทั่วไป', 'พื้นที่ผลิต A']],
+      ['นายอนุชา ศรีสมบัติ', '3-7701-xxxxx-15', 'บจก. พี.เค. เซอร์วิส', 'ผ่าน 3/3', 'ok', 'ผู้ควบคุมงาน', 'พร้อมออกบัตร', 'ok', 'ผู้ควบคุมงาน', 'CT-2569-0460', '31 ส.ค. 2570', 'หัวหน้าชุดงาน', ['ที่อับอากาศ', 'งานความร้อน', 'ผู้ควบคุมงาน', 'ทุกพื้นที่ผลิต']],
+      ['นายเอกชัย พูลผล', '1-4402-xxxxx-77', 'บจก. เอส.พี. เอ็นจิเนียริ่ง', 'หมดอายุ', 'bad', 'ผู้ปฏิบัติงานประจำ', 'ตีกลับ', 'bad', 'ระดับ 2', 'CT-2568-0902', '12 ก.ย. 2569', 'ช่างไฟฟ้า', ['งานไฟฟ้า', 'พื้นที่ผลิต B']],
+      ['นางสาวปิยะดา นิลกุล', '1-2204-xxxxx-30', 'บจก. คลีนโปร แมเนจเมนท์', 'ผ่าน 2/2', 'ok', 'ผู้ปฏิบัติงานประจำ', 'พร้อมออกบัตร', 'ok', 'ระดับ 1', 'CT-2569-0471', '31 ส.ค. 2570', 'พนักงานทำความสะอาด', ['งานทั่วไป', 'พื้นที่สำนักงาน', 'พื้นที่ผลิต A']],
+      ['นายธีรยุทธ บุญมี', '5-6603-xxxxx-51', 'บจก. ไทยคอนสตรัคชั่น', 'ผ่าน 3/3', 'ok', 'ผู้ปฏิบัติงานประจำ', 'รอเอกสาร', 'warn', 'ระดับ 2', 'CT-2569-0480', '31 ส.ค. 2570', 'ช่างกลโรงงาน', ['งานเครื่องจักร', 'งานยกของหนัก', 'พื้นที่ผลิต C']]
+    ];
+    const bi = Math.min(this.state.badge, badgeData.length - 1);
+    const b = badgeData[bi];
+    const badgeQueue = badgeData.map((d, i) => {
+      const tr = tone(d[4]), st = tone(d[7]), on = i === bi;
+      return { name: d[0], idNo: d[1], company: d[2], training: d[3], trBg: tr.bg, trFg: tr.fg,
+        kind: d[5], status: d[6], stBg: st.bg, stFg: st.fg, pick: () => this.setState({ badge: i }),
+        rowBg: on ? 'oklch(0.97 0.018 265)' : '#fff', rowBar: on ? C.acc : 'transparent' };
+    });
+    const tierTone = tone(b[8].indexOf('ควบคุม') >= 0 ? 'info' : 'flat');
+
+    const quizDef = [
+      ['ก', 'ขออนุญาตงานความร้อนและตรวจวัดก๊าซติดไฟในพื้นที่ก่อนเริ่มงาน'],
+      ['ข', 'เริ่มงานได้ทันทีหากมีถังดับเพลิงอยู่ใกล้จุดทำงาน'],
+      ['ค', 'แจ้งหัวหน้างานทางวาจาเพียงอย่างเดียว'],
+      ['ง', 'ตรวจสอบเครื่องเชื่อมหลังเลิกงานแล้วจึงบันทึกผล']
+    ];
+    const quizOptions = quizDef.map(([key, text]) => {
+      const on = this.state.quiz === key;
+      return { key, text, pick: () => this.setState({ quiz: key }),
+        bd: on ? C.accBd : 'oklch(0.92 0.01 265)', bg: on ? C.accBg : '#fff',
+        markBd: on ? C.acc : 'oklch(0.82 0.01 265)', markBg: on ? C.acc : '#fff', markFg: on ? '#fff' : C.mut };
+    });
+
+    const stepDef = [
+      [1, 'ประเภทงาน', 'เลือกชนิดใบอนุญาต'], [2, 'รายละเอียดงาน', 'พื้นที่ เวลา ผู้รับเหมา'],
+      [3, 'ประเมินความเสี่ยง', 'JSA และ PPE'], [4, 'ผู้ปฏิบัติงาน & อนุมัติ', 'ตรวจบัตรและส่งอนุมัติ']
+    ];
+    const steps = stepDef.map(([n, label, hint]) => {
+      const on = this.state.step === n, done = this.state.step > n;
+      return { n: done ? '✓' : String(n), label, hint, go: () => this.setState({ step: n }),
+        bg: on ? C.accBg : done ? 'oklch(0.98 0.008 265)' : '#fff',
+        bd: on ? C.accBd : 'oklch(0.92 0.01 265)',
+        numBg: on ? C.acc : done ? C.grn : 'oklch(0.94 0.01 265)',
+        numFg: on || done ? '#fff' : C.mut };
+    });
+
+    const typeDef = [
+      ['งานที่มีความร้อนและประกายไฟ', 'ตัด เชื่อม เจียร งานที่ก่อให้เกิดประกายไฟในพื้นที่ควบคุม', 'ความเสี่ยงสูง', 'bad', 'HW-01'],
+      ['งานในที่อับอากาศ', 'ถัง ไซโล ท่อ บ่อพัก ต้องตรวจวัดบรรยากาศและมีผู้เฝ้าระวัง', 'ความเสี่ยงสูง', 'bad', 'CS-02'],
+      ['งานบนที่สูง', 'ทำงานสูงเกิน 2 เมตร นั่งร้าน กระเช้า และจุดยึดเข็มขัด', 'ความเสี่ยงสูง', 'bad', 'WH-03'],
+      ['งานระบบไฟฟ้า / LOTO', 'ตัดแยกพลังงาน ล็อกและแขวนป้าย ทดสอบแรงดันก่อนเริ่มงาน', 'ความเสี่ยงปานกลาง', 'warn', 'EL-04'],
+      ['งานขุดเจาะและงานดิน', 'ขุดลึกเกิน 1.5 เมตร ตรวจแนวท่อและสาธารณูปโภคใต้ดิน', 'ความเสี่ยงปานกลาง', 'warn', 'EX-05'],
+      ['งานยกของหนักด้วยเครน', 'แผนการยก ตรวจสลิง และกำหนดเขตห้ามเข้าใต้แนวยก', 'ความเสี่ยงปานกลาง', 'warn', 'LF-06'],
+      ['งานสารเคมีอันตราย', 'ถ่ายเท จัดเก็บ ทำความสะอาดสารเคมี พร้อม SDS ประจำจุดงาน', 'ความเสี่ยงปานกลาง', 'warn', 'CH-07'],
+      ['งานทั่วไปในพื้นที่ผลิต', 'งานบำรุงรักษาที่ไม่เข้าข่ายงานเสี่ยงสูง', 'ความเสี่ยงต่ำ', 'ok', 'GN-08']
+    ];
+    const permitTypes = typeDef.map((t, i) => {
+      const lv = tone(t[3]), on = i === this.state.type;
+      return { name: t[0], detail: t[1], level: t[2], code: t[4], dot: lv.accent, lvBg: lv.bg, lvFg: lv.fg,
+        pick: () => this.setState({ type: i }), bd: on ? C.accBd : 'oklch(0.92 0.01 265)', bg: on ? C.accBg : '#fff' };
+    });
+
+    const vdone = this.state.vidSec >= this.VID_LEN;
+    const mk = (arr, f) => arr.map(f);
+    const flag = (ok, label, detail) => { const t = tone(ok ? 'ok' : 'warn');
+      return { label, detail, mark: ok ? '✓' : '!', bg: t.bg, bd: t.bd, accent: t.accent }; };
+
+    return {
+      nav, bilingual, title: meta[0], subtitle: meta[1], goNewPermit: this.go('permits'),
+      isDash: s === 'dashboard', isContractors: s === 'contractors', isBadges: s === 'badges',
+      isTraining: s === 'training', isPermits: s === 'permits', isReports: s === 'reports',
+
+      kpis: [
+        { label: 'Permit ที่ใช้งานอยู่', value: '38', delta: '+6', deltaColor: C.accFg, note: 'จาก 42 ใบที่อนุมัติวันนี้', dot: C.acc },
+        { label: 'รออนุมัติ', value: '6', delta: '2 เกินกำหนด', deltaColor: C.ambFg, note: 'รอ ผจก.พื้นที่ 4 ใบ', dot: C.amb },
+        { label: 'ผู้รับเหมาในพื้นที่', value: '214', delta: '+18', deltaColor: C.grnFg, note: 'บัตรผ่านการตรวจสอบทั้งหมด', dot: C.grn },
+        { label: 'ข้อบกพร่องค้างแก้ไข', value: '4', delta: '-3', deltaColor: C.grnFg, note: 'เกินกำหนดแก้ไข 1 รายการ', dot: C.red }
+      ],
+      typeBars: [
+        { label: 'งานที่มีความร้อน', value: 74, pct: '100%', color: 'oklch(0.52 0.16 265)' },
+        { label: 'งานบนที่สูง', value: 58, pct: '78%', color: 'oklch(0.56 0.15 265)' },
+        { label: 'งานระบบไฟฟ้า / LOTO', value: 41, pct: '55%', color: 'oklch(0.6 0.13 265)' },
+        { label: 'งานในที่อับอากาศ', value: 33, pct: '45%', color: 'oklch(0.64 0.12 265)' },
+        { label: 'งานยกของหนัก', value: 27, pct: '36%', color: 'oklch(0.68 0.1 265)' },
+        { label: 'งานขุดเจาะและงานดิน', value: 21, pct: '28%', color: 'oklch(0.72 0.08 265)' },
+        { label: 'งานสารเคมีอันตราย', value: 14, pct: '19%', color: 'oklch(0.76 0.06 265)' }
+      ],
+      alerts: [
+        Object.assign({ title: 'ตรวจวัดก๊าซเกินเกณฑ์ — ถัง T-204', detail: 'WP-2569-0914-002 ระงับงานชั่วคราว รอตรวจซ้ำ', time: '09:12' }, tone('bad')),
+        Object.assign({ title: 'Permit ใกล้หมดอายุ 3 ใบ', detail: 'พื้นที่หน่วยผลิต B — ต้องปิดงานภายใน 2 ชั่วโมง', time: '08:40' }, tone('warn')),
+        Object.assign({ title: 'บัตรผู้รับเหมาหมดอายุ 7 ใบ', detail: 'บจก. เอส.พี. เอ็นจิเนียริ่ง — ต้องอบรมทบทวนก่อนต่อบัตร', time: 'เมื่อวาน' }, tone('warn')),
+        Object.assign({ title: 'ประกันภัยผู้รับเหมาหมดอายุ', detail: 'บจก. พี.เค. เซอร์วิส — กรมธรรม์สิ้นสุด 30 ก.ย. 2569', time: 'เมื่อวาน' }, tone('info'))
+      ],
+      dashFilters: [
+        { label: 'ทั้งหมด', bg: C.ink, fg: '#fff', bd: C.ink },
+        { label: 'ความเสี่ยงสูง', bg: '#fff', fg: C.gryFg, bd: C.gryBd },
+        { label: 'ใกล้หมดอายุ', bg: '#fff', fg: C.gryFg, bd: C.gryBd }
+      ],
+      permitRows: mk([
+        ['WP-2569-0914-001', 'งานที่มีความร้อน — เชื่อมท่อไอน้ำ', 'บจก. เอส.พี. เอ็นจิเนียริ่ง', 'หน่วยผลิต A — ชั้น 2', 'สูง', 'bad', '08:00–17:00', 'กำลังทำงาน', 'ok'],
+        ['WP-2569-0914-002', 'งานในที่อับอากาศ — ล้างถัง T-204', 'บจก. พี.เค. เซอร์วิส', 'คลังวัตถุดิบ', 'สูง', 'bad', '07:30–12:00', 'ระงับงาน', 'bad'],
+        ['WP-2569-0914-003', 'งานบนที่สูง — เปลี่ยนหลังคา', 'บจก. ไทยคอนสตรัคชั่น', 'อาคารคลังสินค้า 3', 'สูง', 'bad', '08:00–16:00', 'กำลังทำงาน', 'ok'],
+        ['WP-2569-0914-004', 'งานระบบไฟฟ้า — เปลี่ยนเบรกเกอร์', 'บจก. อีเล็คโทร พลัส', 'ห้องไฟฟ้า MDB-2', 'ปานกลาง', 'warn', '09:00–15:00', 'รออนุมัติ', 'warn'],
+        ['WP-2569-0914-005', 'งานยกของหนัก — ติดตั้งปั๊ม', 'บจก. เอส.พี. เอ็นจิเนียริ่ง', 'ลานเครื่องจักร', 'ปานกลาง', 'warn', '13:00–18:00', 'อนุมัติแล้ว', 'info'],
+        ['WP-2569-0914-006', 'งานทั่วไป — ทำความสะอาดท่อระบาย', 'บจก. คลีนโปร แมเนจเมนท์', 'รอบอาคารผลิต', 'ต่ำ', 'ok', '08:00–17:00', 'กำลังทำงาน', 'ok'],
+        ['WP-2569-0913-018', 'งานสารเคมี — ถ่ายเทกรด', 'บจก. เคมแคร์', 'คลังสารเคมี', 'ปานกลาง', 'warn', 'ปิดงาน 16:45', 'ปิดงานแล้ว', 'flat']
+      ], r => { const rk = tone(r[5]), st = tone(r[8]);
+        return { id: r[0], type: r[1], contractor: r[2], area: r[3], risk: r[4], riskBg: rk.bg, riskFg: rk.fg,
+          time: r[6], status: r[7], stBg: st.bg, stFg: st.fg }; }),
+
+      contractorKpis: [
+        { label: 'ผู้รับเหมาที่ขึ้นทะเบียน', value: '42' },
+        { label: 'พนักงานผู้รับเหมาทั้งหมด', value: '618' },
+        { label: 'ประกันภัยใกล้หมดอายุ', value: '5' },
+        { label: 'ระงับการทำงาน', value: '2' }
+      ],
+      contractors: mk([
+        ['บจก. เอส.พี. เอ็นจิเนียริ่ง', 'SP', 'CTR-0118', 'งานเครื่องกล', 142, '31 ธ.ค. 2569', 'ok', '138 / 142', 'ใช้งานได้', 'ok'],
+        ['บจก. ไทยคอนสตรัคชั่น', 'TC', 'CTR-0092', 'งานโครงสร้าง', 96, '31 มี.ค. 2570', 'ok', '91 / 96', 'ใช้งานได้', 'ok'],
+        ['บจก. พี.เค. เซอร์วิส', 'PK', 'CTR-0203', 'งานทำความสะอาดถัง', 58, '30 ก.ย. 2569', 'warn', '52 / 58', 'เฝ้าระวัง', 'warn'],
+        ['บจก. อีเล็คโทร พลัส', 'EP', 'CTR-0147', 'งานไฟฟ้า', 44, '30 มิ.ย. 2570', 'ok', '44 / 44', 'ใช้งานได้', 'ok'],
+        ['บจก. คลีนโปร แมเนจเมนท์', 'CP', 'CTR-0231', 'งานสนับสนุน', 88, '31 ม.ค. 2570', 'ok', '80 / 88', 'ใช้งานได้', 'ok'],
+        ['บจก. เคมแคร์', 'CC', 'CTR-0175', 'งานสารเคมี', 36, '15 ต.ค. 2569', 'warn', '30 / 36', 'เฝ้าระวัง', 'warn'],
+        ['บจก. ไฮไรส์ เวิร์ค', 'HR', 'CTR-0260', 'งานบนที่สูง', 27, '20 ส.ค. 2569', 'bad', '0 / 27', 'ระงับ', 'bad']
+      ], c => { const ins = tone(c[6]), st = tone(c[9]);
+        return { name: c[0], initials: c[1], code: c[2], scope: c[3], workers: c[4], insurance: c[5],
+          insColor: ins.fg, cards: c[7], status: c[8], stBg: st.bg, stFg: st.fg }; }),
+
+      badgeQueue,
+      badgeChecks: [
+        flag(true, 'เอกสารประจำตัวครบถ้วน', 'สำเนาบัตรประชาชน + ทะเบียนบ้าน'),
+        flag(true, 'ผลตรวจสุขภาพ', 'ตรวจ 12 มี.ค. 2569 — ผ่าน'),
+        flag(true, 'ผ่านการอบรมความปลอดภัยพื้นฐาน', 'คะแนน 92% — 5 ก.ย. 2569'),
+        flag(false, 'ประกันภัยของบริษัทผู้รับเหมา', 'หมดอายุ 30 ก.ย. 2569 — ต่ออายุก่อนออกบัตร')
+      ],
+      card: { name: b[0], role: b[11], company: b[2], no: b[9], expiry: b[10], tier: b[8],
+        tierBg: tierTone.bg, tierFg: tierTone.fg, perms: b[12].map(label => ({ label })) },
+
+      courses: [
+        { name: 'ความปลอดภัยพื้นฐานสำหรับผู้รับเหมา', code: 'TR-101', detail: 'บังคับทุกคนก่อนเข้าพื้นที่ — อายุใบรับรอง 1 ปี', rate: '92%', color: C.grn, taken: 512 },
+        { name: 'งานที่มีความร้อนและการเฝ้าระวังไฟ', code: 'TR-204', detail: 'บังคับสำหรับช่างเชื่อมและผู้เฝ้าระวังไฟ', rate: '84%', color: C.acc, taken: 186 },
+        { name: 'การทำงานในที่อับอากาศ', code: 'TR-206', detail: 'รวมการตรวจวัดบรรยากาศและแผนกู้ภัย', rate: '76%', color: C.amb, taken: 94 },
+        { name: 'การทำงานบนที่สูงและการใช้อุปกรณ์ยึด', code: 'TR-208', detail: 'ภาคปฏิบัติ 3 ชั่วโมง ณ ศูนย์ฝึก', rate: '81%', color: C.acc, taken: 148 }
+      ],
+      examRows: mk([
+        ['นายวิชัย ทองสุข', 'บจก. เอส.พี. เอ็นจิเนียริ่ง', 'งานที่มีความร้อน (TR-204)', '12 ก.ย. 2569', '95%', 'ผ่าน', 'ok'],
+        ['นายอนุชา ศรีสมบัติ', 'บจก. พี.เค. เซอร์วิส', 'ที่อับอากาศ (TR-206)', '12 ก.ย. 2569', '88%', 'ผ่าน', 'ok'],
+        ['นายสมพงษ์ แก้วมณี', 'บจก. ไทยคอนสตรัคชั่น', 'งานบนที่สูง (TR-208)', '11 ก.ย. 2569', '72%', 'ไม่ผ่าน', 'bad'],
+        ['นางสาวปิยะดา นิลกุล', 'บจก. คลีนโปร แมเนจเมนท์', 'ความปลอดภัยพื้นฐาน (TR-101)', '11 ก.ย. 2569', '90%', 'ผ่าน', 'ok'],
+        ['นายธีรยุทธ บุญมี', 'บจก. ไทยคอนสตรัคชั่น', 'งานที่มีความร้อน (TR-204)', '10 ก.ย. 2569', '86%', 'ผ่าน', 'ok'],
+        ['นายเอกชัย พูลผล', 'บจก. เอส.พี. เอ็นจิเนียริ่ง', 'ความปลอดภัยพื้นฐาน (TR-101)', '10 ก.ย. 2569', '78%', 'สอบซ้ำ', 'warn'],
+        ['นายกิตติศักดิ์ วัฒนา', 'บจก. อีเล็คโทร พลัส', 'งานไฟฟ้า / LOTO (TR-212)', '9 ก.ย. 2569', '94%', 'ผ่าน', 'ok']
+      ], e => { const r = tone(e[6]);
+        return { name: e[0], company: e[1], course: e[2], date: e[3], score: e[4], result: e[5],
+          resBg: r.bg, resFg: r.fg, scoreColor: r.fg }; }),
+      quizOptions,
+      videoPct: Math.round((this.state.vidSec / this.VID_LEN) * 100) + '%',
+      videoRemain: this.fmt(this.VID_LEN - this.state.vidSec),
+      videoTime: this.fmt(this.state.vidSec) + ' / ' + this.fmt(this.VID_LEN),
+      videoBarColor: vdone ? C.grn : C.acc,
+      playGlyph: vdone ? '↻' : this.state.playing ? '❙❙' : '▶',
+      togglePlay: this.togglePlay,
+      finishVideo: this.finishVideo,
+      demoSkipLabel: vdone ? '' : 'ข้ามไปท้ายวิดีโอ (สาธิต)',
+      vidBadge: vdone ? 'ดูครบแล้ว' : this.state.playing ? 'กำลังเล่น' : 'ยังดูไม่ครบ',
+      vidBadgeBg: vdone ? C.grnBg : this.state.playing ? C.accBg : C.ambBg,
+      vidBadgeFg: vdone ? C.grnFg : this.state.playing ? C.accFg : C.ambFg,
+      videoNote: vdone
+        ? 'ดูวิดีโอครบตามเกณฑ์ ระบบเปิดสิทธิ์ทำแบบทดสอบให้แล้ว'
+        : 'ระบบบันทึกเวลาที่ดูจริง ข้ามหรือเร่งความเร็วไม่ได้ และต้องดูครบ 100% ก่อนเข้าทำแบบทดสอบ',
+      examLocked: !vdone,
+      examUnlocked: vdone,
+      examSub: vdone
+        ? 'หลักสูตรความปลอดภัยพื้นฐาน — ข้อ 4 จาก 20'
+        : 'หลักสูตรความปลอดภัยพื้นฐาน — รอปลดล็อกจากการดูวิดีโอ',
+      examProgress: vdone ? '20%' : '0%',
+
+      steps, step1: this.state.step === 1, step2: this.state.step === 2, step3: this.state.step === 3, step4: this.state.step === 4,
+      nextStep: () => this.setState(st => ({ step: Math.min(4, st.step + 1) })),
+      prevStep: () => this.setState(st => ({ step: Math.max(1, st.step - 1) })),
+      permitTypes,
+      formFields: [
+        { label: 'เลขที่ใบอนุญาต', value: 'WP-2569-0912-014', span: 'span 1' },
+        { label: 'วันที่ขออนุญาต', value: '14 กันยายน 2569', span: 'span 1' },
+        { label: 'บริษัทผู้รับเหมา', value: 'บจก. เอส.พี. เอ็นจิเนียริ่ง (CTR-0118)', span: 'span 1' },
+        { label: 'ผู้ควบคุมงาน', value: 'นายอนุชา ศรีสมบัติ — CT-2569-0460', span: 'span 1' },
+        { label: 'พื้นที่ปฏิบัติงาน', value: 'หน่วยผลิต A — ชั้น 2 ใกล้ท่อไอน้ำ HS-12', span: 'span 2' },
+        { label: 'ลักษณะงานโดยละเอียด', value: 'ตัดและเชื่อมท่อไอน้ำขนาด 4 นิ้ว เปลี่ยนวาล์วควบคุม พร้อมทดสอบแรงดันหลังติดตั้ง', span: 'span 2' },
+        { label: 'วันเริ่ม — เวลา', value: '15 ก.ย. 2569  08:00', span: 'span 1' },
+        { label: 'วันสิ้นสุด — เวลา', value: '15 ก.ย. 2569  17:00', span: 'span 1' },
+        { label: 'จำนวนผู้ปฏิบัติงาน', value: '5 คน', span: 'span 1' },
+        { label: 'เจ้าของพื้นที่ผู้อนุญาต', value: 'ฝ่ายผลิต A — นายประสิทธิ์ มั่นคง', span: 'span 1' }
+      ],
+      attachments: [
+        flag(true, 'แผนการปฏิบัติงาน (Method Statement)', 'method-statement-hs12.pdf'),
+        flag(true, 'ผลการตรวจวัดก๊าซ', 'gas-test-20690915-0730.pdf'),
+        flag(true, 'ใบรับรองการอบรมผู้ปฏิบัติงาน', 'training-cert-5-persons.pdf'),
+        flag(true, 'ใบตรวจสอบเครื่องมือและอุปกรณ์', 'tool-inspection-0914.pdf'),
+        flag(false, 'กรมธรรม์ประกันภัยที่ยังไม่หมดอายุ', 'ยังไม่ได้แนบไฟล์')
+      ].map(a => Object.assign({ file: a.detail }, a)),
+      hazards: mk([
+        ['ประกายไฟติดวัสดุไวไฟ', 'เคลื่อนย้ายวัสดุไวไฟออกรัศมี 11 เมตร คลุมผ้ากันไฟ จัดผู้เฝ้าระวังไฟ', 'สูง', 'bad'],
+        ['ไอระเหยสารไวไฟในพื้นที่', 'ตรวจวัดก๊าซก่อนเริ่มงานและทุก 2 ชั่วโมง ต้องต่ำกว่า 10% LEL', 'สูง', 'bad'],
+        ['ควันเชื่อมและฟูมโลหะ', 'ติดตั้งพัดลมดูดอากาศเฉพาะจุด สวมหน้ากากกรองฟูม', 'ปานกลาง', 'warn'],
+        ['พลังงานความร้อนและไอน้ำค้างในระบบ', 'ตัดแยกพลังงาน ระบายแรงดัน ล็อกและแขวนป้าย (LOTO)', 'สูง', 'bad'],
+        ['ตกจากบันไดและนั่งร้าน', 'ใช้นั่งร้านที่ผ่านการตรวจ ติดป้ายสีเขียว และสวมเข็มขัดนิรภัยแบบเต็มตัว', 'ปานกลาง', 'warn']
+      ], h => { const lv = tone(h[3]); return { hazard: h[0], control: h[1], level: h[2], lvBg: lv.bg, lvFg: lv.fg }; }),
+      ppe: mk([
+        ['หมวกนิรภัย', 1], ['แว่นตานิรภัย', 1], ['หน้ากากเชื่อม', 1], ['ถุงมือหนัง', 1],
+        ['ชุดกันประกายไฟ', 1], ['รองเท้านิรภัย', 1], ['หน้ากากกรองฟูม', 1], ['เข็มขัดนิรภัยเต็มตัว', 1],
+        ['ที่อุดหูลดเสียง', 0], ['ชุดป้องกันสารเคมี', 0]
+      ], p => { const on = p[1] === 1;
+        return { label: p[0], mark: on ? '✓' : '', bg: on ? C.accBg : '#fff', bd: on ? C.accBd : 'oklch(0.92 0.01 265)',
+          accent: on ? C.acc : '#fff', accentBd: on ? C.acc : 'oklch(0.85 0.01 265)' }; }),
+      workers: mk([
+        ['นายอนุชา ศรีสมบัติ', 'CT-2569-0460', 'TR-101, TR-204, TR-206', 'ผ่าน', 'ok'],
+        ['นายวิชัย ทองสุข', 'CT-2569-0418', 'TR-101, TR-204, TR-208', 'ผ่าน', 'ok'],
+        ['นายธีรยุทธ บุญมี', 'CT-2569-0480', 'TR-101, TR-204', 'ผ่าน', 'ok'],
+        ['นายสมพงษ์ แก้วมณี', 'CT-2569-0455', 'TR-101', 'ขาด TR-204', 'warn'],
+        ['นายเอกชัย พูลผล', 'CT-2568-0902', 'TR-101 (หมดอายุ)', 'บัตรหมดอายุ', 'bad']
+      ], w => { const st = tone(w[4]);
+        return { name: w[0], card: w[1], courses: w[2], status: w[3], stBg: st.bg, stFg: st.fg }; }),
+      approvals: mk([
+        ['ผู้ขออนุญาต', 'นายอนุชา ศรีสมบัติ — ผู้ควบคุมงาน', '14 ก.ย. 2569 09:05', 'ok'],
+        ['เจ้าหน้าที่ความปลอดภัย (จป.วิชาชีพ)', 'สมชาย อารักษ์', 'รอดำเนินการ', 'warn'],
+        ['เจ้าของพื้นที่', 'ฝ่ายผลิต A — นายประสิทธิ์ มั่นคง', 'รอลำดับก่อนหน้า', 'flat'],
+        ['ผู้จัดการโรงงาน', 'นายวีระพงษ์ เจริญสุข', 'เฉพาะงานความเสี่ยงสูง', 'flat']
+      ], (a, i, arr) => { const t = tone(a[3]), last = i === arr.length - 1;
+        return { role: a[0], person: a[1], time: a[2], mark: a[3] === 'ok' ? '✓' : a[3] === 'warn' ? '!' : String(i + 1),
+          dotBg: a[3] === 'ok' ? C.grn : a[3] === 'warn' ? C.amb : '#fff',
+          dotBd: a[3] === 'flat' ? 'oklch(0.88 0.01 265)' : t.accent,
+          dotFg: a[3] === 'flat' ? C.mut : '#fff', timeColor: t.fg,
+          lineColor: last ? 'transparent' : 'oklch(0.92 0.01 265)', lineH: last ? '0px' : '18px' }; }),
+
+      reportStats: [
+        { label: 'Permit ที่ออกทั้งหมด', value: '312', delta: '+8%', deltaColor: C.accFg, note: 'เทียบกับเดือนก่อน 289 ใบ' },
+        { label: 'ชั่วโมงทำงานปลอดอุบัติเหตุ', value: '48,200', delta: 'สะสม 214 วัน', deltaColor: C.grnFg, note: 'ไม่มีการหยุดงานจากอุบัติเหตุ' },
+        { label: 'เหตุการณ์เกือบเกิดอุบัติเหตุ', value: '11', delta: '+3', deltaColor: C.ambFg, note: 'รายงานเพิ่มจากการรณรงค์แจ้งเหตุ' },
+        { label: 'อัตราการปิดงานตรงเวลา', value: '96%', delta: '+4%', deltaColor: C.grnFg, note: 'ค้างปิด 12 ใบ แก้ไขครบแล้ว' },
+        { label: 'ผู้รับเหมาที่ถูกระงับ', value: '2', delta: 'คงที่', deltaColor: C.mut, note: 'บัตรหมดอายุและประกันภัยขาด' }
+      ],
+      monthBars: [
+        { label: 'มี.ค.', value: 241, h: '62%', incH: '22%' },
+        { label: 'เม.ย.', value: 198, h: '51%', incH: '18%' },
+        { label: 'พ.ค.', value: 264, h: '68%', incH: '30%' },
+        { label: 'มิ.ย.', value: 276, h: '71%', incH: '26%' },
+        { label: 'ก.ค.', value: 289, h: '74%', incH: '34%' },
+        { label: 'ส.ค.', value: 312, h: '100%', incH: '28%' }
+      ],
+      findings: [
+        { label: 'ไม่ติดป้ายเตือนเขตปฏิบัติงาน', value: 24, pct: '100%', color: 'oklch(0.6 0.16 40)' },
+        { label: 'PPE ไม่ครบตามที่ระบุในใบอนุญาต', value: 19, pct: '79%', color: 'oklch(0.66 0.15 50)' },
+        { label: 'ไม่ตรวจวัดก๊าซซ้ำตามรอบเวลา', value: 13, pct: '54%', color: 'oklch(0.72 0.14 62)' },
+        { label: 'อุปกรณ์ดับเพลิงไม่พร้อมใช้ ณ จุดงาน', value: 9, pct: '38%', color: 'oklch(0.76 0.12 72)' },
+        { label: 'เอกสารใบอนุญาตไม่แสดงที่หน้างาน', value: 7, pct: '29%', color: 'oklch(0.8 0.1 82)' }
+      ],
+      ranking: mk([
+        ['บจก. อีเล็คโทร พลัส', 62, 1, '98', 'ok'],
+        ['บจก. เอส.พี. เอ็นจิเนียริ่ง', 104, 6, '92', 'ok'],
+        ['บจก. คลีนโปร แมเนจเมนท์', 48, 4, '89', 'ok'],
+        ['บจก. ไทยคอนสตรัคชั่น', 71, 12, '78', 'warn'],
+        ['บจก. ไฮไรส์ เวิร์ค', 27, 19, '61', 'bad']
+      ], r => { const t = tone(r[4]);
+        return { name: r[0], permits: r[1], findings: r[2], score: r[3], scBg: t.bg, scFg: t.fg }; }),
+      recommendations: mk([
+        ['เพิ่มรอบตรวจพื้นที่งานความร้อนเป็น 2 ครั้งต่อกะ', 'งานความร้อนคิดเป็น 24% ของ permit ทั้งหมด และเป็นแหล่งข้อบกพร่องอันดับหนึ่ง', 'สูง', 'bad'],
+        ['บังคับอบรมทบทวนก่อนต่อบัตรทุกกรณี', 'พบบัตรหมดอายุ 7 ใบจากผู้รับเหมารายเดิมในเดือนนี้', 'สูง', 'bad'],
+        ['ติดตั้งจุดตรวจวัดก๊าซประจำพื้นที่ถังเก็บ', 'ลดภาระการตรวจวัดซ้ำและปิดช่องว่างการบันทึกผล', 'กลาง', 'warn'],
+        ['ทบทวนเงื่อนไขประกันภัยในสัญญาผู้รับเหมา', 'ผู้รับเหมา 5 รายมีกรมธรรม์หมดอายุภายในไตรมาสนี้', 'กลาง', 'warn']
+      ], (r, i) => { const t = tone(r[3]);
+        return { n: String(i + 1).padStart(2, '0'), title: r[0], detail: r[1], priority: r[2], pBg: t.bg, pFg: t.fg }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+html, body { margin: 0; padding: 0; }
+body { background: oklch(0.98 0.005 265); -webkit-font-smoothing: antialiased; }
+a { color: oklch(0.52 0.16 265); text-decoration: none; }
+a:hover { color: oklch(0.42 0.16 265); text-decoration: underline; }
+input, select, textarea, button { font-family: inherit; }
+::placeholder { color: oklch(0.68 0.02 265); }
+
+/* Hover states (inline styles set the resting colors, so hovers need !important) */
+.h-nav:hover { background: oklch(0.28 0.04 265) !important; }
+.h-primary:hover { background: oklch(0.45 0.16 265) !important; }
+.h-dark:hover { background: oklch(0.3 0.05 265) !important; }
+.h-outline:hover { background: oklch(0.97 0.01 265) !important; }
+.h-row:hover { background: oklch(0.98 0.008 265) !important; }
+.h-badge-row:hover { background: oklch(0.97 0.012 265) !important; }
+.h-report-btn:hover { background: oklch(0.38 0.06 265) !important; }
+.h-option:hover { border-color: oklch(0.72 0.08 265) !important; }
+.h-type:hover { border-color: oklch(0.68 0.1 265) !important; }
+.h-drop:hover { border-color: oklch(0.6 0.12 265) !important; }
+.h-underline:hover { text-decoration: underline; }
