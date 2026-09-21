@@ -1,0 +1,81 @@
+// Supabase Edge Function "admin-users": create accounts and reset passwords for the Workpermit app.
+// Uses the service-role key, which Supabase injects into Edge Functions and never reaches the browser.
+// Only callers whose active profile role is "safety" are allowed.
+import { createClient } from 'npm:@supabase/supabase-js@2';
+
+const cors = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+const ROLES = ['safety', 'contractor', 'area_owner', 'manager'];
+const MIN_PASSWORD = 8;
+
+const reply = (status: number, body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  if (req.method !== 'POST') return reply(405, { error: 'Method not allowed' });
+
+  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
+  const { data: auth } = await admin.auth.getUser(token);
+  if (!auth?.user) return reply(401, { error: 'กรุณาเข้าสู่ระบบใหม่' });
+
+  const { data: me } = await admin.from('profiles').select('role, active').eq('id', auth.user.id).maybeSingle();
+  if (me?.role !== 'safety' || !me.active) return reply(403, { error: 'เฉพาะ จป. เท่านั้น' });
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return reply(400, { error: 'ข้อมูลไม่ถูกต้อง' });
+  }
+
+  if (body.action === 'create') {
+    const email = String(body.email ?? '').trim().toLowerCase();
+    const password = String(body.password ?? '');
+    const fullName = String(body.full_name ?? '').trim();
+    const role = String(body.role ?? '');
+    const contractorId = role === 'contractor' ? String(body.contractor_id ?? '') : null;
+
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return reply(400, { error: 'ชื่อผู้ใช้หรืออีเมลไม่ถูกต้อง' });
+    if (password.length < MIN_PASSWORD) return reply(400, { error: `รหัสผ่านต้องมีอย่างน้อย ${MIN_PASSWORD} ตัวอักษร` });
+    if (!fullName) return reply(400, { error: 'กรุณาใส่ชื่อที่แสดง' });
+    if (!ROLES.includes(role)) return reply(400, { error: 'บทบาทไม่ถูกต้อง' });
+    if (role === 'contractor' && !contractorId) return reply(400, { error: 'บัญชีผู้รับเหมาต้องเลือกบริษัท' });
+
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+    if (createErr || !created.user) {
+      const exists = createErr?.message.toLowerCase().includes('already');
+      return reply(400, { error: exists ? 'ชื่อผู้ใช้หรืออีเมลนี้มีบัญชีอยู่แล้ว' : `สร้างบัญชีไม่สำเร็จ: ${createErr?.message}` });
+    }
+
+    const { error: profileErr } = await admin
+      .from('profiles')
+      .insert({ id: created.user.id, full_name: fullName, role, contractor_id: contractorId, active: true });
+    if (profileErr) {
+      await admin.auth.admin.deleteUser(created.user.id);
+      return reply(400, { error: `กำหนดบทบาทไม่สำเร็จ: ${profileErr.message}` });
+    }
+    return reply(200, { id: created.user.id });
+  }
+
+  if (body.action === 'reset_password') {
+    const userId = String(body.user_id ?? '');
+    const password = String(body.password ?? '');
+    if (!userId) return reply(400, { error: 'ไม่พบบัญชีผู้ใช้' });
+    if (password.length < MIN_PASSWORD) return reply(400, { error: `รหัสผ่านต้องมีอย่างน้อย ${MIN_PASSWORD} ตัวอักษร` });
+
+    const { error } = await admin.auth.admin.updateUserById(userId, { password });
+    if (error) return reply(400, { error: `ตั้งรหัสผ่านไม่สำเร็จ: ${error.message}` });
+    return reply(200, { ok: true });
+  }
+
+  return reply(400, { error: 'ไม่รู้จักคำสั่งนี้' });
+});

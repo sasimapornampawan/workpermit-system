@@ -1,6 +1,6 @@
 import type { Tone } from './theme';
 
-export type Screen = 'dashboard' | 'contractors' | 'badges' | 'training' | 'permits' | 'reports';
+export type Screen = 'dashboard' | 'contractors' | 'badges' | 'training' | 'permits' | 'reports' | 'users';
 
 export const NAV: { id: Screen; label: string; en: string }[] = [
   { id: 'dashboard', label: 'แดชบอร์ด', en: 'Dashboard' },
@@ -9,6 +9,7 @@ export const NAV: { id: Screen; label: string; en: string }[] = [
   { id: 'training', label: 'อบรม & ทดสอบ', en: 'Training & Exam' },
   { id: 'permits', label: 'ขอ Work Permit', en: 'Permit Request' },
   { id: 'reports', label: 'รายงานผู้บริหาร', en: 'Reports' },
+  { id: 'users', label: 'จัดการผู้ใช้', en: 'Users' },
 ];
 
 export const SCREEN_META: Record<Screen, [title: string, subtitle: string]> = {
@@ -18,6 +19,7 @@ export const SCREEN_META: Record<Screen, [title: string, subtitle: string]> = {
   training: ['การอบรมและทดสอบ', 'หลักสูตรความปลอดภัย ผลสอบ และอายุใบรับรอง'],
   permits: ['ขอใบอนุญาตทำงาน', 'แบบฟอร์ม 4 ขั้นตอน พร้อมการชี้บ่งอันตรายและลำดับอนุมัติ'],
   reports: ['รายงานสรุปผู้บริหาร', 'สรุปรายเดือน พร้อมแนวโน้มและข้อเสนอเชิงนโยบาย'],
+  users: ['จัดการผู้ใช้', 'บัญชีผู้ใช้ บทบาท และสิทธิ์การเข้าถึงระบบ'],
 };
 
 /* ---------- Dashboard ---------- */

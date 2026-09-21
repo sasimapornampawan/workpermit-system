@@ -1,15 +1,19 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import {
-  supabase, type Alert, type Badge, type Contractor, type Course, type CourseQuestion, type ExamResult,
+  supabase, type AdminUser, type Alert, type Badge, type Contractor, type Course, type CourseQuestion, type ExamResult,
   type Finding, type MonthlyReport, type Permit, type PermitApproval, type PermitEvent, type Recommendation,
 } from '../lib/supabase';
 
 const listeners = new Set<() => void>();
 
-/** Refetch every mounted table hook, e.g. after a write so the sidebar counts update too. */
+/** Refetch every mounted data hook, e.g. after a write so the sidebar counts update too. */
 export const notifyDataChanged = () => listeners.forEach((listener) => listener());
 
-function useTable<T>(table: string, select = '*') {
+type Run = (client: SupabaseClient) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+
+/** `key` identifies the query; `run` is read only when the key changes or data is invalidated. */
+function useFetch<T>(key: string, run: Run) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,19 +33,23 @@ function useTable<T>(table: string, select = '*') {
       setLoading(false);
       return;
     }
-    supabase.from(table).select(select).then(({ data: rows, error: err }) => {
+    run(supabase).then(({ data: rows, error: err }) => {
       if (err) {
         setError(err.message);
       } else {
-        setData((rows ?? []) as unknown as T[]);
+        setData((rows ?? []) as T[]);
         setError(null);
       }
       setLoading(false);
     });
-  }, [table, select, version]);
+    // `run` is recreated every render; `key` captures what it queries.
+  }, [key, version]);
 
   return { data, loading, error };
 }
+
+const useTable = <T,>(table: string, select = '*') =>
+  useFetch<T>(`${table}?${select}`, (client) => client.from(table).select(select));
 
 export const useContractors = () => useTable<Contractor>('contractors');
 export const usePermits = () => useTable<Permit>('permits', '*, contractors(name), permit_next_step');
@@ -56,3 +64,5 @@ export const useAlerts = () => useTable<Alert>('alerts');
 export const useFindings = () => useTable<Finding>('findings');
 export const useMonthlyReports = () => useTable<MonthlyReport>('monthly_reports');
 export const useRecommendations = () => useTable<Recommendation>('recommendations');
+/** Safety officers only; returns no rows for other roles. */
+export const useAdminUsers = () => useFetch<AdminUser>('rpc:admin_list_users', (client) => client.rpc('admin_list_users'));

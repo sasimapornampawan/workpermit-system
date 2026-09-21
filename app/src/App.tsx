@@ -11,15 +11,16 @@ import { AuthMessage, Login } from './screens/Login';
 import { EMPTY_DRAFT, Permits, type PermitDraft } from './screens/Permits';
 import { Reports } from './screens/Reports';
 import { Training } from './screens/Training';
+import { Users } from './screens/Users';
 import { C, SANS } from './theme';
 
 type AppProps = { defaultScreen?: Screen; showEnglishLabels?: boolean };
 
 const HIDDEN_SCREENS: Record<Role, Screen[]> = {
   safety: [],
-  contractor: ['reports'],
-  area_owner: ['permits'],
-  manager: ['permits'],
+  contractor: ['reports', 'users'],
+  area_owner: ['permits', 'users'],
+  manager: ['permits', 'users'],
 };
 
 export default function App({ defaultScreen = 'dashboard', showEnglishLabels = true }: AppProps) {
@@ -61,6 +62,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
               <Permits step={step} onStep={setStep} permitType={permitType} onPermitType={setPermitType} draft={draft} onDraft={setDraft} />
             )}
             {current === 'reports' && <Reports />}
+            {current === 'users' && <Users />}
           </main>
         </div>
       </div>

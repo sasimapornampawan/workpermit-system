@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Button, Field, FormMessage, TextInput } from '../components/form';
-import { signOut } from '../hooks/useAuth';
+import { signOut, toLoginEmail } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { C, L, MONO, SANS } from '../theme';
 
@@ -20,14 +20,6 @@ function Shell({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
-// Supabase Auth needs an email, so username-only accounts are created as <username>@USERNAME_DOMAIN.
-export const USERNAME_DOMAIN = 'workpermit.local';
-
-const toLoginEmail = (identifier: string) => {
-  const value = identifier.trim().toLowerCase();
-  return value.includes('@') ? value : `${value}@${USERNAME_DOMAIN}`;
-};
 
 export function Login() {
   const [identifier, setIdentifier] = useState('');

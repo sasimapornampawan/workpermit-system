@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { FunctionsHttpError, createClient } from '@supabase/supabase-js';
 import type { Tone } from '../theme';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -19,6 +19,37 @@ export const ROLE_LABEL: Record<Role, string> = {
 };
 
 export const APPROVER_ROLES: Role[] = ['safety', 'area_owner', 'manager'];
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: Role | null;
+  active: boolean | null;
+  contractor_id: string | null;
+  contractor_name: string | null;
+  created_at: string;
+  last_sign_in_at: string | null;
+};
+
+const ADMIN_FUNCTION = 'admin-users';
+
+/** Calls the admin-users Edge Function (supabase/functions/admin-users); returns an error message or null. */
+export async function callAdminFunction(body: Record<string, unknown>): Promise<string | null> {
+  if (!supabase) return 'ยังไม่ได้ตั้งค่า Supabase';
+  const { error } = await supabase.functions.invoke(ADMIN_FUNCTION, { body });
+  if (!error) return null;
+  if (error instanceof FunctionsHttpError) {
+    if (error.context.status === 404) return `ยังไม่ได้ติดตั้ง Edge Function "${ADMIN_FUNCTION}" ใน Supabase`;
+    try {
+      const payload = await error.context.json();
+      return payload.error ?? error.message;
+    } catch {
+      return error.message;
+    }
+  }
+  return `เชื่อมต่อ Edge Function "${ADMIN_FUNCTION}" ไม่ได้ ตรวจสอบว่าติดตั้งแล้ว`;
+}
 
 /** Roles allowed to change a permit's status on site; the database enforces the same rule. */
 export const STATUS_ROLES: Role[] = ['safety', 'area_owner'];
