@@ -1,6 +1,6 @@
 import { NAV, type Screen } from '../data';
 import { signOut, useProfile } from '../hooks/useAuth';
-import { useBadges, useContractors, usePermits } from '../hooks/useData';
+import { useBadges, useContractors, useFindings, usePermits } from '../hooks/useData';
 import { ROLE_LABEL } from '../lib/supabase';
 import { L, MONO } from '../theme';
 
@@ -16,7 +16,9 @@ export function Sidebar({ screen, screens, onNavigate, onChangePassword, bilingu
   const contractors = useContractors();
   const badges = useBadges();
   const permits = usePermits();
+  const findings = useFindings();
   const counts: Partial<Record<Screen, number>> = {
+    findings: findings.data.filter((f) => !f.resolved).length,
     dashboard: permits.data.filter((p) => p.permit_next_step === profile.role).length,
     contractors: contractors.data.length,
     badges: badges.data.filter((b) => b.status !== 'issued').length,

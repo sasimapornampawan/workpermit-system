@@ -7,6 +7,7 @@ import type { Role } from './lib/supabase';
 import { Badges } from './screens/Badges';
 import { Contractors } from './screens/Contractors';
 import { Dashboard } from './screens/Dashboard';
+import { Findings } from './screens/Findings';
 import { AuthMessage, ChangePassword, Login } from './screens/Login';
 import { EMPTY_DRAFT, Permits, type PermitDraft } from './screens/Permits';
 import { Reports } from './screens/Reports';
@@ -74,6 +75,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
             {current === 'permits' && (
               <Permits step={step} onStep={setStep} permitType={permitType} onPermitType={setPermitType} draft={draft} onDraft={setDraft} />
             )}
+            {current === 'findings' && <Findings />}
             {current === 'reports' && <Reports />}
             {current === 'users' && <Users />}
           </main>

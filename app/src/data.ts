@@ -1,6 +1,6 @@
 import type { Tone } from './theme';
 
-export type Screen = 'dashboard' | 'contractors' | 'badges' | 'training' | 'permits' | 'reports' | 'users';
+export type Screen = 'dashboard' | 'contractors' | 'badges' | 'training' | 'permits' | 'findings' | 'reports' | 'users';
 
 export const NAV: { id: Screen; label: string; en: string }[] = [
   { id: 'dashboard', label: 'แดชบอร์ด', en: 'Dashboard' },
@@ -8,6 +8,7 @@ export const NAV: { id: Screen; label: string; en: string }[] = [
   { id: 'badges', label: 'บัตรผู้รับเหมา', en: 'ID Badges' },
   { id: 'training', label: 'อบรม & ทดสอบ', en: 'Training & Exam' },
   { id: 'permits', label: 'ขอ Work Permit', en: 'Permit Request' },
+  { id: 'findings', label: 'ข้อบกพร่อง', en: 'Inspection Findings' },
   { id: 'reports', label: 'รายงานผู้บริหาร', en: 'Reports' },
   { id: 'users', label: 'จัดการผู้ใช้', en: 'Users' },
 ];
@@ -18,6 +19,7 @@ export const SCREEN_META: Record<Screen, [title: string, subtitle: string]> = {
   badges: ['การออกบัตรผู้รับเหมา', 'ตรวจสอบคุณสมบัติ ออกบัตร และควบคุมอายุบัตร'],
   training: ['การอบรมและทดสอบ', 'หลักสูตรความปลอดภัย ผลสอบ และอายุใบรับรอง'],
   permits: ['ขอใบอนุญาตทำงาน', 'แบบฟอร์ม 4 ขั้นตอน พร้อมการชี้บ่งอันตรายและลำดับอนุมัติ'],
+  findings: ['ข้อบกพร่องจากการตรวจพื้นที่', 'บันทึก ติดตาม และปิดข้อบกพร่องของผู้รับเหมา'],
   reports: ['รายงานสรุปผู้บริหาร', 'สรุปรายเดือน พร้อมแนวโน้มและข้อเสนอเชิงนโยบาย'],
   users: ['จัดการผู้ใช้', 'บัญชีผู้ใช้ บทบาท และสิทธิ์การเข้าถึงระบบ'],
 };
@@ -25,6 +27,19 @@ export const SCREEN_META: Record<Screen, [title: string, subtitle: string]> = {
 /* ---------- Dashboard ---------- */
 
 export const DASH_FILTERS = ['ทั้งหมด', 'ความเสี่ยงสูง', 'ใกล้หมดอายุ'];
+
+/* ---------- Findings ---------- */
+
+export const FINDING_CATEGORIES = [
+  'ไม่ติดป้ายเตือนเขตปฏิบัติงาน',
+  'PPE ไม่ครบตามที่ระบุในใบอนุญาต',
+  'ไม่ตรวจวัดก๊าซซ้ำตามรอบเวลา',
+  'อุปกรณ์ดับเพลิงไม่พร้อมใช้ ณ จุดงาน',
+  'เอกสารใบอนุญาตไม่แสดงที่หน้างาน',
+  'นั่งร้านหรือบันไดไม่ผ่านการตรวจ',
+  'ไม่ตัดแยกพลังงาน / ไม่ล็อกและแขวนป้าย',
+  'พื้นที่ทำงานไม่เป็นระเบียบ',
+];
 
 /* ---------- Badges ---------- */
 

@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import {
   supabase, type AdminUser, type Alert, type Badge, type Contractor, type Course, type CourseQuestion, type ExamResult,
-  type Finding, type MonthlyReport, type Permit, type PermitApproval, type PermitEvent, type Recommendation,
+  type Finding, type FindingDetail, type MonthlyReport, type Permit, type PermitApproval, type PermitEvent, type Recommendation,
 } from '../lib/supabase';
 
 const listeners = new Set<() => void>();
@@ -62,6 +62,12 @@ export const useCourseQuestions = () => useTable<CourseQuestion>('course_questio
 export const useExamResults = () => useTable<ExamResult>('exam_results', '*, courses(name)');
 export const useAlerts = () => useTable<Alert>('alerts');
 export const useFindings = () => useTable<Finding>('findings');
+/** Needs SUPABASE_PHASE10_FINDINGS.sql; the plain hook above keeps the dashboard working without it. */
+export const useFindingDetails = () =>
+  useTable<FindingDetail>(
+    'findings',
+    '*, contractors(name), permits(permit_no), reporter:profiles!findings_reported_by_fkey(full_name), resolver:profiles!findings_resolved_by_fkey(full_name)',
+  );
 export const useMonthlyReports = () => useTable<MonthlyReport>('monthly_reports');
 export const useRecommendations = () => useTable<Recommendation>('recommendations');
 /** Safety officers only; returns no rows for other roles. */

@@ -170,6 +170,23 @@ export type Alert = { id: string; title: string; detail: string; severity: strin
 
 export type Finding = { id: string; category: string; contractor_id: string; found_on: string; resolved: boolean };
 
+export type Severity = 'สูง' | 'ปานกลาง' | 'ต่ำ';
+
+export type FindingDetail = Finding & {
+  permit_id: string | null;
+  area: string | null;
+  detail: string | null;
+  severity: Severity;
+  due_on: string | null;
+  resolved_at: string | null;
+  resolution_note: string | null;
+  created_at: string;
+  contractors: { name: string } | null;
+  permits: { permit_no: string } | null;
+  reporter: { full_name: string } | null;
+  resolver: { full_name: string } | null;
+};
+
 export type MonthlyReport = { month: string; safe_hours: number; near_misses: number; on_time_close_pct: number };
 
 export type Recommendation = { id: string; title: string; detail: string; priority: string; sort: number };
