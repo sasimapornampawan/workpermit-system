@@ -6,7 +6,7 @@ import { signOut, toLoginEmail } from '../hooks/useAuth';
 import { MIN_PASSWORD, supabase } from '../lib/supabase';
 import { C, L, MONO, SANS } from '../theme';
 
-function Shell({ children }: { children: ReactNode }) {
+export function Shell({ children }: { children: ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', boxSizing: 'border-box', fontFamily: SANS, color: C.ink, fontSize: 14, lineHeight: 1.5 }}>
       <div style={{ width: '100%', maxWidth: 380, background: '#fff', border: `1px solid ${L.cardBd}`, borderRadius: 12, overflow: 'hidden' }}>

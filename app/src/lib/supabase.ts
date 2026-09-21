@@ -136,6 +136,9 @@ export type Badge = {
   perms: string[];
   training_status: string;
   created_at: string;
+  /** Present once SUPABASE_PHASE12_BADGE_PHOTO_QR.sql has run. */
+  photo_path?: string | null;
+  verify_token?: string;
 };
 
 export const BADGE_KINDS = ['ผู้ปฏิบัติงานประจำ', 'ผู้ปฏิบัติงานชั่วคราว', 'ผู้ควบคุมงาน'];

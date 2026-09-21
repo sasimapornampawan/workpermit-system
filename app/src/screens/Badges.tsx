@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { BadgeQr } from '../components/BadgeQr';
+import { uploadBadgePhoto, useBadgePhotoUrl, verifyUrl } from '../lib/badgePhotos';
 import { BRAND } from '../brand';
 import { BadgeForm } from '../components/BadgeForm';
 import { BrandMark } from '../components/BrandMark';
@@ -110,6 +112,15 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
       {current && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 88 }}>
           <BadgePreview badge={current} />
+          {(isSafety || profile.role === 'contractor') && (
+            <PhotoPicker
+              badge={current}
+              onResult={(m) => {
+                setMessage(m);
+                if (!m.error) notifyDataChanged();
+              }}
+            />
+          )}
           {isSafety && (
             <div style={{ display: 'flex', gap: 8 }}>
               <Button disabled={busy || current.status !== 'ready'} onClick={() => issue(current)} style={{ flex: 1, padding: 9 }}>
@@ -132,8 +143,33 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
   );
 }
 
+function PhotoPicker({ badge, onResult }: { badge: Badge; onResult: (m: { error: boolean; text: string }) => void }) {
+  const [busy, setBusy] = useState(false);
+
+  async function change(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setBusy(true);
+    const failure = await uploadBadgePhoto(badge.id, file);
+    setBusy(false);
+    onResult(failure ? { error: true, text: failure } : { error: false, text: `บันทึกรูปของ ${badge.name} แล้ว` });
+  }
+
+  return (
+    <label
+      className={busy ? undefined : 'h-outline'}
+      style={{ display: 'block', textAlign: 'center', padding: 8, borderRadius: 8, border: '1px dashed oklch(0.82 0.02 265)', background: '#fff', fontSize: 12.5, fontWeight: 500, color: 'oklch(0.42 0.12 265)', cursor: busy ? 'default' : 'pointer' }}
+    >
+      {busy ? 'กำลังอัปโหลดรูป...' : badge.photo_path ? 'เปลี่ยนรูปพนักงาน' : '+ อัปโหลดรูปพนักงาน'}
+      <input type="file" accept="image/jpeg,image/png" disabled={busy} onChange={change} style={{ display: 'none' }} />
+    </label>
+  );
+}
+
 function BadgePreview({ badge }: { badge: Badge }) {
   const tier = tone(badge.tier?.includes('ควบคุม') ? 'info' : 'flat');
+  const photoUrl = useBadgePhotoUrl(badge.photo_path ?? null);
   return (
     <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid oklch(0.88 0.01 265)', background: '#fff', boxShadow: '0 8px 24px -12px oklch(0.3 0.05 265 / 0.28)' }}>
       <div style={{ background: L.navy, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -148,9 +184,13 @@ function BadgePreview({ badge }: { badge: Badge }) {
       </div>
 
       <div style={{ padding: 14, display: 'flex', gap: 12 }}>
-        <div style={{ width: 82, height: 100, flex: '0 0 82px', borderRadius: 6, border: '1px solid oklch(0.88 0.01 265)', background: 'repeating-linear-gradient(135deg, oklch(0.95 0.01 265) 0 6px, oklch(0.91 0.012 265) 6px 12px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 6 }}>
-          <div style={{ fontFamily: MONO, fontSize: 8, color: 'oklch(0.45 0.02 265)', letterSpacing: '0.04em' }}>PHOTO</div>
-        </div>
+        {photoUrl ? (
+          <img src={photoUrl} alt={`รูปของ ${badge.name}`} style={{ width: 82, height: 100, flex: '0 0 82px', objectFit: 'cover', borderRadius: 6, border: '1px solid oklch(0.88 0.01 265)' }} />
+        ) : (
+          <div style={{ width: 82, height: 100, flex: '0 0 82px', boxSizing: 'border-box', borderRadius: 6, border: '1px solid oklch(0.88 0.01 265)', background: 'repeating-linear-gradient(135deg, oklch(0.95 0.01 265) 0 6px, oklch(0.91 0.012 265) 6px 12px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 6 }}>
+            <div style={{ fontFamily: MONO, fontSize: 8, color: 'oklch(0.45 0.02 265)', letterSpacing: '0.04em' }}>{badge.photo_path ? 'LOADING' : 'NO PHOTO'}</div>
+          </div>
+        )}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em' }}>{badge.name}</div>
           <div style={{ fontSize: 11.5, color: 'oklch(0.5 0.02 265)', marginBottom: 8 }}>{badge.role}</div>
@@ -172,7 +212,11 @@ function BadgePreview({ badge }: { badge: Badge }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderTop: '1px dashed oklch(0.88 0.01 265)', background: 'oklch(0.985 0.004 265)' }}>
-        <div style={{ width: 52, height: 52, flex: '0 0 52px', background: 'repeating-conic-gradient(oklch(0.25 0.03 265) 0% 25%, #fff 0% 50%) 0 0 / 9px 9px', borderRadius: 3 }} />
+        {badge.verify_token ? (
+          <BadgeQr value={verifyUrl(badge.verify_token)} size={56} />
+        ) : (
+          <div style={{ width: 56, height: 56, flex: '0 0 56px', background: 'oklch(0.95 0.01 265)', borderRadius: 3 }} />
+        )}
         <div style={{ fontSize: 10.5, color: 'oklch(0.5 0.02 265)', lineHeight: 1.5 }}>สแกนเพื่อตรวจสอบสถานะบัตรและ<br />ประวัติการอบรมที่จุดคัดกรอง</div>
       </div>
     </div>
