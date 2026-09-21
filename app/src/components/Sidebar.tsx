@@ -4,9 +4,14 @@ import { useBadges, useContractors, usePermits } from '../hooks/useData';
 import { ROLE_LABEL } from '../lib/supabase';
 import { L, MONO } from '../theme';
 
-type Props = { screen: Screen; screens: Screen[]; onNavigate: (s: Screen) => void; bilingual: boolean };
+type Props = { screen: Screen; screens: Screen[]; onNavigate: (s: Screen) => void; onChangePassword: () => void; bilingual: boolean };
 
-export function Sidebar({ screen, screens, onNavigate, bilingual }: Props) {
+const footerButton = {
+  flex: 1, background: 'transparent', border: '1px solid oklch(0.36 0.05 265)', borderRadius: 6,
+  color: 'oklch(0.86 0.02 265)', fontSize: 11, padding: '5px 6px', cursor: 'pointer', whiteSpace: 'nowrap',
+} as const;
+
+export function Sidebar({ screen, screens, onNavigate, onChangePassword, bilingual }: Props) {
   const profile = useProfile();
   const contractors = useContractors();
   const badges = useBadges();
@@ -56,20 +61,18 @@ export function Sidebar({ screen, screens, onNavigate, bilingual }: Props) {
         })}
       </nav>
 
-      <div style={{ padding: 14, borderTop: '1px solid oklch(0.3 0.04 265)', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ padding: 14, borderTop: '1px solid oklch(0.3 0.04 265)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ width: 30, height: 30, flex: '0 0 30px', borderRadius: '50%', background: 'oklch(0.35 0.05 265)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'oklch(0.85 0.03 265)' }}>{initials}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile.full_name}</div>
           <div style={{ fontSize: 10.5, color: 'oklch(0.7 0.03 265)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ROLE_LABEL[profile.role]}</div>
         </div>
-        <button
-          type="button"
-          onClick={() => signOut()}
-          className="h-nav"
-          style={{ background: 'transparent', border: '1px solid oklch(0.36 0.05 265)', borderRadius: 6, color: 'oklch(0.86 0.02 265)', fontSize: 11, padding: '4px 8px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-        >
-          ออกจากระบบ
-        </button>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button type="button" onClick={onChangePassword} className="h-nav" style={footerButton}>เปลี่ยนรหัสผ่าน</button>
+          <button type="button" onClick={() => signOut()} className="h-nav" style={footerButton}>ออกจากระบบ</button>
+        </div>
       </div>
     </aside>
   );

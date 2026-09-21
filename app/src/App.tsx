@@ -7,7 +7,7 @@ import type { Role } from './lib/supabase';
 import { Badges } from './screens/Badges';
 import { Contractors } from './screens/Contractors';
 import { Dashboard } from './screens/Dashboard';
-import { AuthMessage, Login } from './screens/Login';
+import { AuthMessage, ChangePassword, Login } from './screens/Login';
 import { EMPTY_DRAFT, Permits, type PermitDraft } from './screens/Permits';
 import { Reports } from './screens/Reports';
 import { Training } from './screens/Training';
@@ -24,8 +24,9 @@ const HIDDEN_SCREENS: Record<Role, Screen[]> = {
 };
 
 export default function App({ defaultScreen = 'dashboard', showEnglishLabels = true }: AppProps) {
-  const { session, profile, loading } = useAuth();
+  const { session, profile, loading, reloadProfile } = useAuth();
   const [screen, setScreen] = useState<Screen>(defaultScreen);
+  const [changingPassword, setChangingPassword] = useState(false);
   // Kept at app level so progress survives switching between menu screens.
   const [badge, setBadge] = useState(0);
   const [step, setStep] = useState(1);
@@ -42,6 +43,18 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
   if (loading) return <AuthMessage>กำลังตรวจสอบการเข้าสู่ระบบ...</AuthMessage>;
   if (!session) return <Login />;
   if (!profile) return <AuthMessage showSignOut>บัญชีนี้ยังไม่ได้กำหนดบทบาทในระบบ กรุณาติดต่อเจ้าหน้าที่ความปลอดภัย</AuthMessage>;
+  if (profile.must_change_password || changingPassword) {
+    return (
+      <ChangePassword
+        forced={profile.must_change_password}
+        onDone={() => {
+          setChangingPassword(false);
+          reloadProfile();
+        }}
+        onCancel={() => setChangingPassword(false)}
+      />
+    );
+  }
 
   const screens = NAV.map((n) => n.id).filter((id) => !HIDDEN_SCREENS[profile.role].includes(id));
   const current = screens.includes(screen) ? screen : 'dashboard';
@@ -50,7 +63,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
   return (
     <ProfileContext.Provider value={profile}>
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '100vh', fontFamily: SANS, color: C.ink, fontSize: 14, lineHeight: 1.5 }}>
-        <Sidebar screen={current} screens={screens} onNavigate={setScreen} bilingual={showEnglishLabels} />
+        <Sidebar screen={current} screens={screens} onNavigate={setScreen} onChangePassword={() => setChangingPassword(true)} bilingual={showEnglishLabels} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <Topbar title={title} subtitle={subtitle} onNewPermit={screens.includes('permits') ? () => setScreen('permits') : undefined} />
           <main style={{ flex: 1, padding: '20px 24px 40px' }}>

@@ -9,7 +9,9 @@ export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUr
 
 export type Role = 'safety' | 'contractor' | 'area_owner' | 'manager';
 
-export type Profile = { id: string; full_name: string; role: Role; contractor_id: string | null };
+export type Profile = { id: string; full_name: string; role: Role; contractor_id: string | null; must_change_password: boolean };
+
+export const MIN_PASSWORD = 8;
 
 export const ROLE_LABEL: Record<Role, string> = {
   safety: 'เจ้าหน้าที่ความปลอดภัย (จป.)',
@@ -34,11 +36,7 @@ export type AdminUser = {
 
 const ADMIN_FUNCTION = 'admin-users';
 
-/** Calls the admin-users Edge Function (supabase/functions/admin-users); returns an error message or null. */
-export async function callAdminFunction(body: Record<string, unknown>): Promise<string | null> {
-  if (!supabase) return 'ยังไม่ได้ตั้งค่า Supabase';
-  const { error } = await supabase.functions.invoke(ADMIN_FUNCTION, { body });
-  if (!error) return null;
+async function adminFunctionError(error: unknown): Promise<string> {
   if (error instanceof FunctionsHttpError) {
     if (error.context.status === 404) return `ยังไม่ได้ติดตั้ง Edge Function "${ADMIN_FUNCTION}" ใน Supabase`;
     try {
@@ -49,6 +47,14 @@ export async function callAdminFunction(body: Record<string, unknown>): Promise<
     }
   }
   return `เชื่อมต่อ Edge Function "${ADMIN_FUNCTION}" ไม่ได้ ตรวจสอบว่าติดตั้งแล้ว`;
+}
+
+/** Calls the admin-users Edge Function (supabase/functions/admin-users). */
+export async function callAdminFunction(body: Record<string, unknown>): Promise<{ data: Record<string, unknown> | null; error: string | null }> {
+  if (!supabase) return { data: null, error: 'ยังไม่ได้ตั้งค่า Supabase' };
+  const { data, error } = await supabase.functions.invoke(ADMIN_FUNCTION, { body });
+  if (error) return { data: null, error: await adminFunctionError(error) };
+  return { data: data as Record<string, unknown>, error: null };
 }
 
 /** Roles allowed to change a permit's status on site; the database enforces the same rule. */

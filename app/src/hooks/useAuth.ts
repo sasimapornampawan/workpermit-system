@@ -17,6 +17,7 @@ export const displayLogin = (email: string) =>
 export function useAuth() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  const [profileVersion, setProfileVersion] = useState(0);
 
   useEffect(() => {
     if (!supabase) {
@@ -44,11 +45,18 @@ export function useAuth() {
       .maybeSingle()
       .then(({ data }) => {
         const row = data as (Profile & { active?: boolean }) | null;
-        setProfile(row && row.active !== false ? { id: row.id, full_name: row.full_name, role: row.role, contractor_id: row.contractor_id } : null);
+        setProfile(row && row.active !== false
+          ? { id: row.id, full_name: row.full_name, role: row.role, contractor_id: row.contractor_id, must_change_password: row.must_change_password === true }
+          : null);
       });
-  }, [userId]);
+  }, [userId, profileVersion]);
 
-  return { session, profile, loading: session === undefined || (!!userId && profile === undefined) };
+  return {
+    session,
+    profile,
+    loading: session === undefined || (!!userId && profile === undefined),
+    reloadProfile: () => setProfileVersion((v) => v + 1),
+  };
 }
 
 export const signOut = () => supabase?.auth.signOut();

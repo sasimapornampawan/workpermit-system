@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Button, Field, FormMessage, TextInput } from '../components/form';
 import { signOut, toLoginEmail } from '../hooks/useAuth';
-import { supabase } from '../lib/supabase';
+import { MIN_PASSWORD, supabase } from '../lib/supabase';
 import { C, L, MONO, SANS } from '../theme';
 
 function Shell({ children }: { children: ReactNode }) {
@@ -62,6 +62,64 @@ export function Login() {
         </Field>
         {error && <FormMessage error>{error}</FormMessage>}
         <Button type="submit" disabled={busy} style={{ padding: 10 }}>{busy ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}</Button>
+      </form>
+    </Shell>
+  );
+}
+
+/** forced = the account still has a temporary password set by a safety officer. */
+export function ChangePassword({ forced, onDone, onCancel }: { forced: boolean; onDone: () => void; onCancel: () => void }) {
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!supabase) return;
+    if (password.length < MIN_PASSWORD) {
+      setError(`รหัสผ่านต้องมีอย่างน้อย ${MIN_PASSWORD} ตัวอักษร`);
+      return;
+    }
+    if (password !== confirm) {
+      setError('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const { error: err } = await supabase.auth.updateUser({ password });
+    if (err) {
+      setBusy(false);
+      setError(err.message.toLowerCase().includes('different') ? 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม' : `เปลี่ยนรหัสผ่านไม่สำเร็จ: ${err.message}`);
+      return;
+    }
+    const { error: flagErr } = await supabase.rpc('password_changed');
+    setBusy(false);
+    if (flagErr && forced) {
+      setError(`เปลี่ยนรหัสผ่านแล้ว แต่บันทึกสถานะไม่สำเร็จ: ${flagErr.message}`);
+      return;
+    }
+    onDone();
+  }
+
+  return (
+    <Shell>
+      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>{forced ? 'ตั้งรหัสผ่านใหม่ก่อนเริ่มใช้งาน' : 'เปลี่ยนรหัสผ่าน'}</div>
+          <div style={{ fontSize: 12, color: C.mut }}>
+            {forced ? 'รหัสผ่านที่ได้รับจากเจ้าหน้าที่ความปลอดภัยเป็นรหัสชั่วคราว' : 'รหัสผ่านใหม่จะใช้ได้ทันที'}
+          </div>
+        </div>
+        <Field label="รหัสผ่านใหม่">
+          <TextInput type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={`อย่างน้อย ${MIN_PASSWORD} ตัวอักษร`} />
+        </Field>
+        <Field label="ยืนยันรหัสผ่านใหม่">
+          <TextInput type="password" required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        </Field>
+        {error && <FormMessage error>{error}</FormMessage>}
+        <Button type="submit" disabled={busy} style={{ padding: 10 }}>{busy ? 'กำลังบันทึก...' : 'บันทึกรหัสผ่านใหม่'}</Button>
+        <Button variant="outline" onClick={forced ? () => signOut() : onCancel}>{forced ? 'ออกจากระบบ' : 'ยกเลิก'}</Button>
       </form>
     </Shell>
   );

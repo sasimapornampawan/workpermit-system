@@ -3,12 +3,20 @@ import { Button, Field, FormMessage, Select, TextInput } from '../components/for
 import { Card, CardTitle, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
 import { USERNAME_DOMAIN, displayLogin, toLoginEmail, useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useAdminUsers, useContractors } from '../hooks/useData';
-import { ROLE_LABEL, callAdminFunction, supabase, type AdminUser, type Contractor, type Role } from '../lib/supabase';
+import { MIN_PASSWORD, ROLE_LABEL, callAdminFunction, supabase, type AdminUser, type Contractor, type Role } from '../lib/supabase';
 import { C, L, MONO, type Tone } from '../theme';
 
 const COLS = 'minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 128px 118px';
 const ROLES = Object.keys(ROLE_LABEL) as Role[];
-const MIN_PASSWORD = 8;
+
+/** Returns a note for the success message: whether the user will be asked to replace the temporary password. */
+async function requirePasswordChange(userId: string) {
+  if (!supabase) return '';
+  const { error } = await supabase.rpc('admin_require_password_change', { p_user_id: userId });
+  return error
+    ? ` — แต่ตั้งให้ต้องเปลี่ยนรหัสผ่านไม่สำเร็จ: ${error.message}`
+    : ' ผู้ใช้จะต้องเปลี่ยนรหัสผ่านเองเมื่อเข้าใช้ครั้งถัดไป';
+}
 
 type Message = { error: boolean; text: string };
 
@@ -156,7 +164,7 @@ function CreateUserForm({ contractors, onClose, onCreated }: { contractors: Cont
     }
     setSaving(true);
     setError(null);
-    const failure = await callAdminFunction({
+    const { data, error: failure } = await callAdminFunction({
       action: 'create',
       email: toLoginEmail(login),
       password,
@@ -164,13 +172,15 @@ function CreateUserForm({ contractors, onClose, onCreated }: { contractors: Cont
       role,
       contractor_id: role === 'contractor' ? contractorId : null,
     });
-    setSaving(false);
     if (failure) {
+      setSaving(false);
       setError(failure);
       return;
     }
+    const note = await requirePasswordChange(String(data?.id));
+    setSaving(false);
     notifyDataChanged();
-    onCreated(`สร้างบัญชีแล้ว — ชื่อผู้ใช้ ${displayLogin(toLoginEmail(login))} รหัสผ่าน ${password} (แจ้งผู้ใช้ด้วยตนเอง)`);
+    onCreated(`สร้างบัญชีแล้ว — ชื่อผู้ใช้ ${displayLogin(toLoginEmail(login))} รหัสผ่านชั่วคราว ${password} (แจ้งผู้ใช้ด้วยตนเอง)${note}`);
   }
 
   return (
@@ -234,13 +244,15 @@ function UserEditor({ user, isSelf, contractors, onClose }: { user: AdminUser; i
     }
     setBusy('password');
     setMessage(null);
-    const failure = await callAdminFunction({ action: 'reset_password', user_id: user.id, password });
-    setBusy(null);
+    const { error: failure } = await callAdminFunction({ action: 'reset_password', user_id: user.id, password });
     if (failure) {
+      setBusy(null);
       setMessage({ error: true, text: failure });
       return;
     }
-    setMessage({ error: false, text: `ตั้งรหัสผ่านใหม่แล้ว: ${password} (แจ้งผู้ใช้ด้วยตนเอง)` });
+    const note = await requirePasswordChange(user.id);
+    setBusy(null);
+    setMessage({ error: false, text: `ตั้งรหัสผ่านชั่วคราวแล้ว: ${password} (แจ้งผู้ใช้ด้วยตนเอง)${note}` });
     setPassword('');
   }
 
