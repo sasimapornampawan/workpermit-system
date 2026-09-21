@@ -18,13 +18,22 @@ input, select, textarea, button { font-family: inherit; }
 .h-drop:hover { border-color: oklch(0.6 0.12 265) !important; }
 .h-underline:hover { text-decoration: underline; }
 
-/* Printing: only elements marked .print-only (e.g. the contractor badge) reach paper */
+/* Printing — lib/print.ts sets body[data-print]: "badge" prints only the .print-only card,
+   "report" prints the page without navigation or .no-print controls. */
 .print-only { display: none; }
 @media print {
-  @page { size: A4 portrait; margin: 15mm; }
-  #root { display: none !important; }
-  .print-only { display: block; width: 90mm; }
-  .print-only * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { size: A4 portrait; margin: 12mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body[data-print="badge"] #root { display: none !important; }
+  body[data-print="badge"] .print-only { display: block; width: 90mm; }
+
+  body[data-print="report"] { background: #fff; }
+  body[data-print="report"] aside,
+  body[data-print="report"] header,
+  body[data-print="report"] .no-print { display: none !important; }
+  body[data-print="report"] main { padding: 0 !important; }
+  body[data-print="report"] main > div > * { break-inside: avoid; }
 }
 
 /* YouTube replaces the placeholder with an iframe that must fill the 16:9 box */

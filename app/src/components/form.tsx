@@ -27,13 +27,14 @@ export function Select({ style, ...props }: SelectHTMLAttributes<HTMLSelectEleme
   return <select {...props} style={{ ...inputStyle, ...style }} />;
 }
 
-export function Button({ variant = 'primary', style, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'outline' }) {
+export function Button({ variant = 'primary', style, className, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'outline' }) {
   const primary = variant === 'primary';
+  const hover = props.disabled ? '' : primary ? 'h-primary' : 'h-outline';
   return (
     <button
       type="button"
       {...props}
-      className={props.disabled ? undefined : primary ? 'h-primary' : 'h-outline'}
+      className={[hover, className].filter(Boolean).join(' ') || undefined}
       style={{
         padding: '7px 13px', borderRadius: 7, fontSize: 12.5, fontWeight: 500, whiteSpace: 'nowrap',
         cursor: props.disabled ? 'default' : 'pointer', opacity: props.disabled ? 0.55 : 1,

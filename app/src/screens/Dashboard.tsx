@@ -1,24 +1,16 @@
 import { useState } from 'react';
 import { Button, FormMessage } from '../components/form';
+import { AlertsCard } from '../components/AlertsCard';
 import { PermitDetail } from '../components/PermitDetail';
 import { Bar, Card, CardTitle, DataState, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
 import { useProfile } from '../hooks/useAuth';
-import { notifyDataChanged, useAlerts, useContractors, useFindings, usePermits } from '../hooks/useData';
+import { notifyDataChanged, useContractors, useFindings, usePermits } from '../hooks/useData';
 import { countBy, pct, sameMonth } from '../lib/stats';
-import { APPROVER_ROLES, ROLE_LABEL, asTone, permitStatus, riskTone, supabase, type Permit, type Role } from '../lib/supabase';
+import { APPROVER_ROLES, ROLE_LABEL, permitStatus, riskTone, supabase, type Permit, type Role } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
 const COLS = '118px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 0.9fr) 96px 104px 92px';
 const BAR_COLORS = ['oklch(0.52 0.16 265)', 'oklch(0.56 0.15 265)', 'oklch(0.6 0.13 265)', 'oklch(0.64 0.12 265)', 'oklch(0.68 0.1 265)', 'oklch(0.72 0.08 265)', 'oklch(0.76 0.06 265)'];
-const SEVERITY_ORDER: Record<string, number> = { bad: 0, warn: 1, info: 2 };
-
-function alertTime(iso: string, now: Date) {
-  const d = new Date(iso);
-  return d.toDateString() === now.toDateString()
-    ? d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
-    : d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
-}
-
 const FILTERS = [['all', 'ทั้งหมด'], ['high', 'ความเสี่ยงสูง'], ['expiring', 'ใกล้หมดอายุ']] as const;
 type Filter = (typeof FILTERS)[number][0];
 
@@ -32,7 +24,6 @@ export function Dashboard({ query }: { query: string }) {
   const permits = usePermits();
   const contractors = useContractors();
   const findings = useFindings();
-  const alerts = useAlerts();
   const profile = useProfile();
   const now = new Date();
   const waitingForMe = permits.data.filter((p) => p.permit_next_step === profile.role);
@@ -65,10 +56,6 @@ export function Dashboard({ query }: { query: string }) {
   const typeBars = [...countBy(thisMonth, (p) => p.type.split(' — ')[0])].sort((a, b) => b[1] - a[1]);
   const maxType = Math.max(...typeBars.map(([, n]) => n));
 
-  const sortedAlerts = [...alerts.data].sort(
-    (a, b) => (SEVERITY_ORDER[a.severity] ?? 3) - (SEVERITY_ORDER[b.severity] ?? 3) || b.created_at.localeCompare(a.created_at),
-  );
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
@@ -97,26 +84,7 @@ export function Dashboard({ query }: { query: string }) {
           </div>
         </Card>
 
-        <Card style={{ padding: '16px 18px' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>แจ้งเตือนที่ต้องดำเนินการ</div>
-          <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)', marginBottom: 14 }}>เรียงตามความเร่งด่วน</div>
-          <DataState loading={alerts.loading} error={alerts.error} count={sortedAlerts.length} style={{ padding: 0 }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {sortedAlerts.map((a) => {
-              const t = tone(asTone(a.severity));
-              return (
-                <div key={a.id} style={{ display: 'flex', gap: 10, padding: '10px 11px', borderRadius: 8, background: t.bg, border: `1px solid ${t.bd}` }}>
-                  <div style={{ width: 3, borderRadius: 2, background: t.accent, flex: '0 0 3px' }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 500, marginBottom: 2 }}>{a.title}</div>
-                    <div style={{ fontSize: 11.5, color: 'oklch(0.48 0.02 265)' }}>{a.detail}</div>
-                  </div>
-                  <div style={{ fontFamily: MONO, fontSize: 10.5, color: 'oklch(0.55 0.02 265)', whiteSpace: 'nowrap' }}>{alertTime(a.created_at, now)}</div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+        <AlertsCard now={now} />
       </div>
 
       <Card style={{ overflowX: 'auto' }}>

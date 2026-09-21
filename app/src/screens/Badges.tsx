@@ -2,6 +2,7 @@ import { useState, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { BadgeQr } from '../components/BadgeQr';
 import { uploadBadgePhoto, useBadgePhotoUrl, verifyUrl } from '../lib/badgePhotos';
+import { printWith } from '../lib/print';
 import { BRAND } from '../brand';
 import { BadgeForm } from '../components/BadgeForm';
 import { BrandMark } from '../components/BrandMark';
@@ -127,7 +128,7 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
                 {busy ? 'กำลังบันทึก...' : current.status === 'issued' ? 'ออกบัตรแล้ว' : 'ออกบัตร'}
               </Button>
               <Button variant="outline" onClick={() => setEditing(current)} style={{ padding: '9px 14px' }}>แก้ไข</Button>
-              <Button variant="outline" onClick={() => window.print()} style={{ padding: '9px 14px' }}>พิมพ์</Button>
+              <Button variant="outline" onClick={() => printWith('badge')} style={{ padding: '9px 14px' }}>พิมพ์</Button>
             </div>
           )}
           {message ? (

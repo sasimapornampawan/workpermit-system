@@ -169,7 +169,7 @@ export type ExamResult = {
   courses: { name: string } | null;
 };
 
-export type Alert = { id: string; title: string; detail: string; severity: string; created_at: string };
+export type Alert = { id: string; title: string; detail: string; severity: string; created_at: string; closed_at?: string | null };
 
 export type Finding = { id: string; category: string; contractor_id: string; found_on: string; resolved: boolean };
 
