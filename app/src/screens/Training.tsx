@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { CourseEditor } from '../components/CourseEditor';
 import { ExamRunner } from '../components/ExamRunner';
-import { Button } from '../components/form';
+import { Button, FormMessage } from '../components/form';
 import { Bar, Card, CardTitle, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
 import { useProfile } from '../hooks/useAuth';
-import { useBadges, useCourseQuestions, useCourses, useExamResults } from '../hooks/useData';
+import { notifyDataChanged, useBadges, useCourseQuestions, useCourses, useExamResults } from '../hooks/useData';
 import { countBy, localDate } from '../lib/stats';
-import { examResult, type Course } from '../lib/supabase';
+import { examResult, supabase, type Course } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
 const COLS = 'minmax(0, 1.3fr) minmax(0, 1.2fr) 100px 72px 96px';
@@ -21,6 +21,20 @@ export function Training() {
   const questions = useCourseQuestions();
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [editing, setEditing] = useState<Course | 'new' | null>(null);
+  const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
+
+  async function setActive(course: Course, active: boolean) {
+    if (!supabase) return;
+    if (!active && !window.confirm(`ยกเลิกหลักสูตร ${course.name}?\nผู้รับเหมาจะไม่เห็นหลักสูตรนี้ ผลสอบเดิมยังเก็บไว้ และเปิดใช้งานอีกครั้งได้`)) return;
+    setMessage(null);
+    const { data: rows, error } = await supabase.from('courses').update({ active }).eq('code', course.code).select('code');
+    if (error || !rows?.length) {
+      setMessage({ error: true, text: `บันทึกไม่สำเร็จ: ${error?.message ?? 'ไม่มีสิทธิ์แก้ไขหลักสูตรนี้'}` });
+      return;
+    }
+    setMessage({ error: false, text: `${active ? 'เปิดใช้งาน' : 'ยกเลิก'}หลักสูตร ${course.name} แล้ว` });
+    notifyDataChanged();
+  }
 
   const isSafety = profile.role === 'safety';
   const canRunExam = isSafety || profile.role === 'contractor';
@@ -45,9 +59,12 @@ export function Training() {
           key={editing === 'new' ? 'new' : editing.code}
           course={editing === 'new' ? null : editing}
           questions={questions.data}
+          taken={editing === 'new' ? 0 : takenByCourse.get(editing.code) ?? 0}
           onClose={() => setEditing(null)}
         />
       )}
+
+      {message && <FormMessage error={message.error}>{message.text}</FormMessage>}
 
       <DataState loading={courses.loading} error={courses.error} count={courseList.length} style={{ padding: 0 }} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(215px, 1fr))', gap: 12 }}>
@@ -84,7 +101,16 @@ export function Training() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'oklch(0.55 0.02 265)', borderTop: `1px solid ${L.rowBd}`, paddingTop: 9 }}>
                 <span>สอบแล้ว {taken} ครั้ง · เกณฑ์ {c.pass_score}%</span>
                 {isSafety && (
-                  <span onClick={() => setEditing(c)} className="h-underline" style={{ color: 'oklch(0.45 0.12 265)', fontWeight: 500, cursor: 'pointer' }}>แก้ไข</span>
+                  <span style={{ display: 'flex', gap: 10 }}>
+                    <span
+                      onClick={() => setActive(c, !c.active)}
+                      className="h-underline"
+                      style={{ color: c.active ? tone('bad').fg : tone('ok').fg, fontWeight: 500, cursor: 'pointer' }}
+                    >
+                      {c.active ? 'ยกเลิกหลักสูตร' : 'เปิดใช้งาน'}
+                    </span>
+                    <span onClick={() => setEditing(c)} className="h-underline" style={{ color: 'oklch(0.45 0.12 265)', fontWeight: 500, cursor: 'pointer' }}>แก้ไข</span>
+                  </span>
                 )}
               </div>
             </Card>

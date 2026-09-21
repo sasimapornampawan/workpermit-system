@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { notifyDataChanged } from '../hooks/useData';
 import { supabase, type Course, type CourseQuestion } from '../lib/supabase';
-import { C, L, MONO } from '../theme';
+import { C, L, MONO, tone } from '../theme';
 import { Button, Field, FormMessage, TextArea, TextInput } from './form';
 import { Card } from './ui';
 import { youTubeId } from './YouTubePlayer';
@@ -13,7 +13,9 @@ type QuestionDraft = { id?: string; question: string; options: string[]; correct
 
 const emptyQuestion = (): QuestionDraft => ({ question: '', options: Array(OPTION_COUNT).fill(''), correct_index: 0 });
 
-export function CourseEditor({ course, questions, onClose }: { course: Course | null; questions: CourseQuestion[]; onClose: () => void }) {
+export function CourseEditor({ course, questions, taken, onClose }: {
+  course: Course | null; questions: CourseQuestion[]; taken: number; onClose: () => void;
+}) {
   const [form, setForm] = useState({
     code: course?.code ?? '',
     name: course?.name ?? '',
@@ -34,6 +36,25 @@ export function CourseEditor({ course, questions, onClose }: { course: Course | 
   const [error, setError] = useState<string | null>(null);
 
   const setDraft = (i: number, next: Partial<QuestionDraft>) => setDrafts(drafts.map((d, j) => (j === i ? { ...d, ...next } : d)));
+
+  async function remove() {
+    if (!supabase || !course) return;
+    if (!window.confirm(`ลบหลักสูตร ${course.name} และข้อสอบทั้งหมดถาวร?\nลบแล้วกู้คืนไม่ได้`)) return;
+    setSaving(true);
+    setError(null);
+    const { data: rows, error: err } = await supabase.from('courses').delete().eq('code', course.code).select('code');
+    setSaving(false);
+    if (err) {
+      setError(err.code === '23503' ? 'ลบไม่ได้เพราะมีผลสอบของหลักสูตรนี้แล้ว ให้ใช้ "ยกเลิกหลักสูตร" แทน' : `ลบไม่สำเร็จ: ${err.message}`);
+      return;
+    }
+    if (!rows?.length) {
+      setError('ไม่มีสิทธิ์ลบหลักสูตรนี้');
+      return;
+    }
+    notifyDataChanged();
+    onClose();
+  }
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -178,7 +199,16 @@ export function CourseEditor({ course, questions, onClose }: { course: Course | 
         </div>
 
         {error && <FormMessage error style={{ marginTop: 12 }}>{error}</FormMessage>}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', marginTop: 16, flexWrap: 'wrap' }}>
+          {course && (
+            <div style={{ marginRight: 'auto' }}>
+              {taken === 0 ? (
+                <Button variant="outline" disabled={saving} onClick={remove} style={{ color: tone('bad').fg }}>ลบหลักสูตร</Button>
+              ) : (
+                <span style={{ fontSize: 11.5, color: 'oklch(0.55 0.02 265)' }}>มีผลสอบแล้ว {taken} ครั้ง จึงลบไม่ได้ ใช้ "ยกเลิกหลักสูตร" ที่การ์ดแทน</span>
+              )}
+            </div>
+          )}
           <Button variant="outline" onClick={onClose}>ยกเลิก</Button>
           <Button type="submit" disabled={saving}>{saving ? 'กำลังบันทึก...' : 'บันทึกหลักสูตรและข้อสอบ'}</Button>
         </div>
