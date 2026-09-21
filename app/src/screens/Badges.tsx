@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { BRAND } from '../brand';
 import { BadgeForm } from '../components/BadgeForm';
 import { BrandMark } from '../components/BrandMark';
@@ -102,6 +103,9 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
           </div>
         </Card>
       </div>
+
+      {/* Print copy lives outside #root so the print stylesheet can hide the whole app and show only the card. */}
+      {current && createPortal(<div className="print-only"><BadgePreview badge={current} /></div>, document.body)}
 
       {current && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 88 }}>

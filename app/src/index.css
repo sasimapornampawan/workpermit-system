@@ -18,5 +18,14 @@ input, select, textarea, button { font-family: inherit; }
 .h-drop:hover { border-color: oklch(0.6 0.12 265) !important; }
 .h-underline:hover { text-decoration: underline; }
 
+/* Printing: only elements marked .print-only (e.g. the contractor badge) reach paper */
+.print-only { display: none; }
+@media print {
+  @page { size: A4 portrait; margin: 15mm; }
+  #root { display: none !important; }
+  .print-only { display: block; width: 90mm; }
+  .print-only * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 /* YouTube replaces the placeholder with an iframe that must fill the 16:9 box */
 .yt-holder > * { display: block; width: 100%; height: 100%; }
