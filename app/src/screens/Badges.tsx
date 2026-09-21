@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { BadgeForm } from '../components/BadgeForm';
 import { Button, FormMessage } from '../components/form';
 import { Card, CardTitle, CheckItem, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
 import { BADGE_CHECKS } from '../data';
 import { useProfile } from '../hooks/useAuth';
-import { notifyDataChanged, useBadges } from '../hooks/useData';
+import { notifyDataChanged, useBadges, useContractors } from '../hooks/useData';
 import { asTone, badgeStatus, supabase, type Badge } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
@@ -12,6 +13,8 @@ const COLS = 'minmax(0, 1.4fr) minmax(0, 1.2fr) 108px 120px 96px';
 export function Badges({ selected, onSelect }: { selected: number; onSelect: (i: number) => void }) {
   const profile = useProfile();
   const { data, loading, error } = useBadges();
+  const contractors = useContractors();
+  const [editing, setEditing] = useState<Badge | 'new' | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
 
@@ -19,6 +22,7 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
   const current = queue.length ? queue[Math.min(selected, queue.length - 1)] : null;
   const pending = queue.filter((b) => b.status !== 'issued').length;
   const isSafety = profile.role === 'safety';
+  const canRequest = isSafety || profile.role === 'contractor';
 
   function select(i: number) {
     setMessage(null);
@@ -46,10 +50,21 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, alignItems: 'start' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {editing && (
+          <BadgeForm
+            key={editing === 'new' ? 'new' : editing.id}
+            badge={editing === 'new' ? null : editing}
+            contractors={contractors.data}
+            onClose={() => setEditing(null)}
+          />
+        )}
         <Card style={{ overflowX: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '13px 18px', borderBottom: `1px solid ${L.headBd}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 18px', borderBottom: `1px solid ${L.headBd}` }}>
             <CardTitle title="คำขอออกบัตรผู้รับเหมา" sub="เลือกรายการเพื่อดูตัวอย่างบัตรและออกบัตร" style={{ flex: 1 }} />
-            <div style={{ fontFamily: MONO, fontSize: 11, padding: '3px 9px', borderRadius: 20, background: 'oklch(0.96 0.03 70)', color: 'oklch(0.45 0.12 70)', border: '1px solid oklch(0.88 0.06 70)' }}>รอดำเนินการ {pending}</div>
+            <div style={{ fontFamily: MONO, fontSize: 11, padding: '3px 9px', borderRadius: 20, background: 'oklch(0.96 0.03 70)', color: 'oklch(0.45 0.12 70)', border: '1px solid oklch(0.88 0.06 70)', whiteSpace: 'nowrap' }}>รอดำเนินการ {pending}</div>
+            {canRequest && (
+              <Button disabled={editing === 'new'} onClick={() => setEditing('new')} style={{ padding: '6px 12px', fontSize: 12 }}>+ เพิ่มคำขอบัตร</Button>
+            )}
           </div>
           <TableHead columns={COLS} minWidth={720} labels={['ผู้ปฏิบัติงาน', 'บริษัท', 'อบรมผ่าน', 'ประเภทบัตร', 'สถานะ']} />
           <DataState loading={loading} error={error} count={queue.length} />
@@ -94,6 +109,7 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
               <Button disabled={busy || current.status !== 'ready'} onClick={() => issue(current)} style={{ flex: 1, padding: 9 }}>
                 {busy ? 'กำลังบันทึก...' : current.status === 'issued' ? 'ออกบัตรแล้ว' : 'ออกบัตร'}
               </Button>
+              <Button variant="outline" onClick={() => setEditing(current)} style={{ padding: '9px 14px' }}>แก้ไข</Button>
               <Button variant="outline" onClick={() => window.print()} style={{ padding: '9px 14px' }}>พิมพ์</Button>
             </div>
           )}

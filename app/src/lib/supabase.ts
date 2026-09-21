@@ -90,16 +90,19 @@ export type Badge = {
   company: string;
   training: string;
   status: string;
-  id_no: string;
-  kind: string;
-  tier: string;
-  card_no: string;
-  expiry: string;
-  role: string;
+  id_no: string | null;
+  kind: string | null;
+  tier: string | null;
+  card_no: string | null;
+  expiry: string | null;
+  role: string | null;
   perms: string[];
   training_status: string;
   created_at: string;
 };
+
+export const BADGE_KINDS = ['ผู้ปฏิบัติงานประจำ', 'ผู้ปฏิบัติงานชั่วคราว', 'ผู้ควบคุมงาน'];
+export const BADGE_TIERS = ['ระดับ 1', 'ระดับ 2', 'ผู้ควบคุมงาน'];
 
 export type Course = { code: string; name: string; detail: string; pass_rate: number; taken: number };
 
