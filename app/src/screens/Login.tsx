@@ -1,4 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
+import { BRAND } from '../brand';
+import { BrandMark } from '../components/BrandMark';
 import { Button, Field, FormMessage, TextInput } from '../components/form';
 import { signOut, toLoginEmail } from '../hooks/useAuth';
 import { MIN_PASSWORD, supabase } from '../lib/supabase';
@@ -8,11 +10,12 @@ function Shell({ children }: { children: ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', boxSizing: 'border-box', fontFamily: SANS, color: C.ink, fontSize: 14, lineHeight: 1.5 }}>
       <div style={{ width: '100%', maxWidth: 380, background: '#fff', border: `1px solid ${L.cardBd}`, borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ background: L.navy, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 10, color: '#fff' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 6, background: 'oklch(0.62 0.17 265)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 14, fontWeight: 600, color: 'oklch(0.15 0.04 265)' }}>P</div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>Safety Permit</div>
-            <div style={{ fontSize: 10.5, color: 'oklch(0.72 0.03 265)', fontFamily: MONO, letterSpacing: '0.04em' }}>PTW SYSTEM v2</div>
+        <div style={{ background: L.navy, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 12, color: '#fff' }}>
+          <BrandMark height={34} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.35 }}>{BRAND.nameTh}</div>
+            <div style={{ fontSize: 10.5, color: 'oklch(0.72 0.03 265)', fontFamily: MONO, letterSpacing: '0.04em' }}>{BRAND.nameEn}</div>
+            <div style={{ fontSize: 11.5, color: 'oklch(0.8 0.03 265)', marginTop: 2 }}>{BRAND.site} · ระบบใบอนุญาตทำงาน (Work Permit)</div>
           </div>
         </div>
         <div style={{ padding: 22 }}>{children}</div>

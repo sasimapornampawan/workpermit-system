@@ -1,4 +1,6 @@
+import { BRAND } from '../brand';
 import { NAV, type Screen } from '../data';
+import { BrandMark } from './BrandMark';
 import { signOut, useProfile } from '../hooks/useAuth';
 import { useBadges, useContractors, useFindings, usePermits } from '../hooks/useData';
 import { ROLE_LABEL } from '../lib/supabase';
@@ -30,10 +32,11 @@ export function Sidebar({ screen, screens, onNavigate, onChangePassword, bilingu
     <aside style={{ width: 232, flex: '0 0 232px', background: L.navy, color: 'oklch(0.97 0.01 265)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' }}>
       <div style={{ padding: '20px 18px 18px', borderBottom: '1px solid oklch(0.3 0.04 265)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 26, height: 26, borderRadius: 6, background: 'oklch(0.62 0.17 265)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 13, fontWeight: 600, color: 'oklch(0.15 0.04 265)' }}>P</div>
-          <div>
-            <div style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: '0.01em' }}>Safety Permit</div>
-            <div style={{ fontSize: 10.5, color: 'oklch(0.72 0.03 265)', fontFamily: MONO, letterSpacing: '0.04em' }}>PTW SYSTEM v2</div>
+          <BrandMark height={26} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: '0.01em' }}>Safety Work Permit</div>
+            <div style={{ fontSize: 11, color: 'oklch(0.78 0.03 265)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{BRAND.shortTh}</div>
+            <div style={{ fontSize: 10, color: 'oklch(0.68 0.03 265)' }}>{BRAND.site}</div>
           </div>
         </div>
       </div>

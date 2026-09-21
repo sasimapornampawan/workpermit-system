@@ -1,3 +1,4 @@
+import { BRAND } from './brand';
 import type { Tone } from './theme';
 
 export type Screen = 'dashboard' | 'contractors' | 'badges' | 'training' | 'permits' | 'findings' | 'reports' | 'users';
@@ -14,7 +15,7 @@ export const NAV: { id: Screen; label: string; en: string }[] = [
 ];
 
 export const SCREEN_META: Record<Screen, [title: string, subtitle: string]> = {
-  dashboard: ['ภาพรวมความปลอดภัยประจำวัน', 'ข้อมูลจากฐานข้อมูลล่าสุด — โรงงานระยอง'],
+  dashboard: ['ภาพรวมความปลอดภัยประจำวัน', `${BRAND.nameTh} — ${BRAND.site}`],
   contractors: ['ทะเบียนผู้รับเหมา', 'ข้อมูลบริษัท พนักงาน ประกันภัย และสถานะการขึ้นทะเบียน'],
   badges: ['การออกบัตรผู้รับเหมา', 'ตรวจสอบคุณสมบัติ ออกบัตร และควบคุมอายุบัตร'],
   training: ['การอบรมและทดสอบ', 'หลักสูตรความปลอดภัย ผลสอบ และอายุใบรับรอง'],

@@ -1,3 +1,5 @@
+import { BRAND } from '../brand';
+import { BrandMark } from '../components/BrandMark';
 import { Bar, Card, DataState, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
 import { useContractors, useFindings, useMonthlyReports, usePermits, useRecommendations } from '../hooks/useData';
 import { countBy, localDate, pct, sameMonth } from '../lib/stats';
@@ -55,9 +57,14 @@ export function Reports() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 1180 }}>
       <div style={{ background: L.navy, borderRadius: 12, padding: '22px 24px', color: '#fff', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.12em', color: 'oklch(0.76 0.04 265)', marginBottom: 6 }}>MONTHLY SAFETY REPORT</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <BrandMark height={28} />
+            <div style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.12em', color: 'oklch(0.76 0.04 265)' }}>MONTHLY SAFETY REPORT · {BRAND.nameEn}</div>
+          </div>
           <div style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.01em' }}>รายงานสรุปงานความปลอดภัย ประจำเดือน{now.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</div>
-          <div style={{ fontSize: 12.5, color: 'oklch(0.8 0.03 265)', marginTop: 6 }}>จัดทำโดยแผนกความปลอดภัย อาชีวอนามัย และสภาพแวดล้อมในการทำงาน</div>
+          <div style={{ fontSize: 12.5, color: 'oklch(0.8 0.03 265)', marginTop: 6 }}>
+            {BRAND.nameTh} ({BRAND.site}) — จัดทำโดยแผนกความปลอดภัย อาชีวอนามัย และสภาพแวดล้อมในการทำงาน
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <div className="h-report-btn" style={{ padding: '8px 14px', borderRadius: 7, background: 'oklch(0.32 0.05 265)', fontSize: 12.5, cursor: 'pointer' }}>เลือกเดือน</div>

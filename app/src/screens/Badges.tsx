@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { BRAND } from '../brand';
 import { BadgeForm } from '../components/BadgeForm';
+import { BrandMark } from '../components/BrandMark';
 import { Button, FormMessage } from '../components/form';
 import { Card, CardTitle, CheckItem, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
 import { BADGE_CHECKS } from '../data';
@@ -131,9 +133,12 @@ function BadgePreview({ badge }: { badge: Badge }) {
   return (
     <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid oklch(0.88 0.01 265)', background: '#fff', boxShadow: '0 8px 24px -12px oklch(0.3 0.05 265 / 0.28)' }}>
       <div style={{ background: L.navy, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ color: '#fff' }}>
-          <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.02em' }}>บัตรผู้รับเหมา</div>
-          <div style={{ fontSize: 9.5, color: 'oklch(0.74 0.03 265)', fontFamily: MONO, letterSpacing: '0.06em' }}>CONTRACTOR ID CARD</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: '#fff', minWidth: 0 }}>
+          <BrandMark height={22} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: '0.02em' }}>บัตรผู้รับเหมา · {BRAND.shortTh}</div>
+            <div style={{ fontSize: 9.5, color: 'oklch(0.74 0.03 265)', fontFamily: MONO, letterSpacing: '0.06em' }}>CONTRACTOR ID CARD · {BRAND.site}</div>
+          </div>
         </div>
         <div style={{ padding: '3px 8px', borderRadius: 4, background: tier.bg, color: tier.fg, fontSize: 10, fontWeight: 600 }}>{badge.tier}</div>
       </div>
