@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, FormMessage } from '../components/form';
+import { PermitDetail } from '../components/PermitDetail';
 import { Bar, Card, CardTitle, DataState, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
 import { DASH_FILTERS } from '../data';
 import { useProfile } from '../hooks/useAuth';
@@ -27,6 +28,9 @@ export function Dashboard() {
   const profile = useProfile();
   const now = new Date();
   const waitingForMe = permits.data.filter((p) => p.permit_next_step === profile.role);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = permits.data.find((p) => p.id === selectedId);
+  const sortedPermits = [...permits.data].sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   const byStatus = (s: string) => permits.data.filter((p) => p.status === s).length;
   const onSite = contractors.data.filter((c) => c.status !== 'bad');
@@ -98,7 +102,7 @@ export function Dashboard() {
 
       <Card style={{ overflowX: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: `1px solid ${L.headBd}` }}>
-          <CardTitle title="Permit ที่กำลังใช้งาน" sub={`อัปเดต ${now.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}`} style={{ flex: 1 }} />
+          <CardTitle title="Permit ทั้งหมด" sub="คลิกรายการเพื่อดูรายละเอียด ประวัติ และเปลี่ยนสถานะงาน" style={{ flex: 1 }} />
           {DASH_FILTERS.map((label, i) => {
             const on = i === 0;
             return (
@@ -110,10 +114,17 @@ export function Dashboard() {
         </div>
         <TableHead columns={COLS} minWidth={900} labels={['เลขที่', 'ประเภทงาน', 'ผู้รับเหมา', 'พื้นที่', 'ความเสี่ยง', 'วันที่สร้าง', 'สถานะ']} />
         <DataState loading={permits.loading} error={permits.error} count={permits.data.length} />
-        {permits.data.map((r) => {
+        {sortedPermits.map((r) => {
           const [statusLabel, statusTone] = permitStatus(r.status);
+          const on = r.id === selectedId;
           return (
-            <TableRow key={r.id} columns={COLS} minWidth={900} style={{ cursor: 'pointer' }}>
+            <TableRow
+              key={r.id}
+              columns={COLS}
+              minWidth={900}
+              onClick={() => setSelectedId(on ? null : r.id)}
+              style={{ cursor: 'pointer', background: on ? 'oklch(0.97 0.018 265)' : undefined, borderLeft: `3px solid ${on ? C.acc : 'transparent'}` }}
+            >
               <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.45 0.1 265)', fontWeight: 500 }}>{r.permit_no}</div>
               <div style={{ fontSize: 12.5, ...ellipsis }}>{r.type}</div>
               <div style={{ fontSize: 12.5, color: 'oklch(0.42 0.02 265)', ...ellipsis }}>{r.contractors?.name ?? '—'}</div>
@@ -125,6 +136,8 @@ export function Dashboard() {
           );
         })}
       </Card>
+
+      {selected && <PermitDetail permit={selected} onClose={() => setSelectedId(null)} />}
     </div>
   );
 }

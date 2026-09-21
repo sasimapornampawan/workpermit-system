@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   supabase, type Alert, type Badge, type Contractor, type Course, type ExamResult,
-  type Finding, type MonthlyReport, type Permit, type Recommendation,
+  type Finding, type MonthlyReport, type Permit, type PermitApproval, type PermitEvent, type Recommendation,
 } from '../lib/supabase';
 
 const listeners = new Set<() => void>();
@@ -45,6 +45,8 @@ function useTable<T>(table: string, select = '*') {
 
 export const useContractors = () => useTable<Contractor>('contractors');
 export const usePermits = () => useTable<Permit>('permits', '*, contractors(name), permit_next_step');
+export const usePermitApprovals = () => useTable<PermitApproval>('permit_approvals', '*, profiles(full_name)');
+export const usePermitEvents = () => useTable<PermitEvent>('permit_events', '*, profiles(full_name)');
 export const useBadges = () => useTable<Badge>('badges');
 export const useCourses = () => useTable<Course>('courses');
 export const useExamResults = () => useTable<ExamResult>('exam_results', '*, courses(name)');

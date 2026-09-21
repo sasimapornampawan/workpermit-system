@@ -20,6 +20,19 @@ export const ROLE_LABEL: Record<Role, string> = {
 
 export const APPROVER_ROLES: Role[] = ['safety', 'area_owner', 'manager'];
 
+/** Roles allowed to change a permit's status on site; the database enforces the same rule. */
+export const STATUS_ROLES: Role[] = ['safety', 'area_owner'];
+
+export type PermitAction = 'start' | 'suspend' | 'resume' | 'close';
+
+/** Mirrors change_permit_status in SUPABASE_PHASE4_STATUS.sql, which is the authority. */
+export const PERMIT_ACTIONS: Record<PermitAction, { label: string; from: string[]; needsNote: boolean }> = {
+  start: { label: 'เริ่มงาน', from: ['approved'], needsNote: false },
+  suspend: { label: 'ระงับงาน', from: ['active'], needsNote: true },
+  resume: { label: 'กลับมาทำงาน', from: ['suspended'], needsNote: false },
+  close: { label: 'ปิดงาน', from: ['active', 'suspended'], needsNote: false },
+};
+
 export type Contractor = {
   id: string;
   name: string;
@@ -48,6 +61,27 @@ export type Permit = {
   created_at: string;
   permit_next_step: Role | null;
   contractors: { name: string } | null;
+};
+
+export type PermitApproval = {
+  id: string;
+  permit_id: string;
+  step: Role;
+  decision: 'approved' | 'rejected';
+  note: string | null;
+  decided_at: string;
+  profiles: { full_name: string } | null;
+};
+
+export type PermitEvent = {
+  id: string;
+  permit_id: string;
+  action: string;
+  from_status: string;
+  to_status: string;
+  note: string | null;
+  acted_at: string;
+  profiles: { full_name: string } | null;
 };
 
 export type Badge = {
