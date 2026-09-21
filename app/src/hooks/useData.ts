@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  supabase, type Alert, type Badge, type Contractor, type Course, type ExamResult,
+  supabase, type Alert, type Badge, type Contractor, type Course, type CourseQuestion, type ExamResult,
   type Finding, type MonthlyReport, type Permit, type PermitApproval, type PermitEvent, type Recommendation,
 } from '../lib/supabase';
 
@@ -49,6 +49,8 @@ export const usePermitApprovals = () => useTable<PermitApproval>('permit_approva
 export const usePermitEvents = () => useTable<PermitEvent>('permit_events', '*, profiles(full_name)');
 export const useBadges = () => useTable<Badge>('badges');
 export const useCourses = () => useTable<Course>('courses');
+/** Safety officers only; other roles get no rows because answers are stored here. */
+export const useCourseQuestions = () => useTable<CourseQuestion>('course_questions');
 export const useExamResults = () => useTable<ExamResult>('exam_results', '*, courses(name)');
 export const useAlerts = () => useTable<Alert>('alerts');
 export const useFindings = () => useTable<Finding>('findings');

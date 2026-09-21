@@ -104,7 +104,18 @@ export type Badge = {
 export const BADGE_KINDS = ['ผู้ปฏิบัติงานประจำ', 'ผู้ปฏิบัติงานชั่วคราว', 'ผู้ควบคุมงาน'];
 export const BADGE_TIERS = ['ระดับ 1', 'ระดับ 2', 'ผู้ควบคุมงาน'];
 
-export type Course = { code: string; name: string; detail: string; pass_rate: number; taken: number };
+export type Course = {
+  code: string;
+  name: string;
+  detail: string;
+  video_url: string | null;
+  pass_score: number;
+  question_count: number;
+  required: boolean;
+  active: boolean;
+};
+
+export type CourseQuestion = { id: string; course_code: string; question: string; options: string[]; correct_index: number; sort: number };
 
 export type ExamResult = {
   id: string;
@@ -114,6 +125,7 @@ export type ExamResult = {
   taken_on: string;
   score: number;
   result: string;
+  badge_id: string | null;
   courses: { name: string } | null;
 };
 
