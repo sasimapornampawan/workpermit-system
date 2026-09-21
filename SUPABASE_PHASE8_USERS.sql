@@ -1,5 +1,12 @@
 -- Phase 8: user and role management for safety officers. Safe to re-run.
 
+-- The admin-users Edge Function uses service_role, which bypasses RLS but still needs table privileges;
+-- this project was created without Supabase's default grants.
+GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
 -- Revoking access deactivates the profile instead of deleting it, so approval and status history keep their author.
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT true;
 
