@@ -1,7 +1,6 @@
-import { useState } from 'react';
+type Props = { title: string; subtitle: string; query: string; onQuery: (q: string) => void; onNewPermit?: () => void };
 
-export function Topbar({ title, subtitle, onNewPermit }: { title: string; subtitle: string; onNewPermit?: () => void }) {
-  const [query, setQuery] = useState('');
+export function Topbar({ title, subtitle, query, onQuery, onNewPermit }: Props) {
   return (
     <header style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px 16px', padding: '14px 24px', background: '#fff', borderBottom: '1px solid oklch(0.91 0.01 265)', position: 'sticky', top: 0, zIndex: 5 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -10,11 +9,13 @@ export function Topbar({ title, subtitle, onNewPermit }: { title: string; subtit
       </div>
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 11px', border: '1px solid oklch(0.9 0.01 265)', borderRadius: 7, background: 'oklch(0.985 0.004 265)', minWidth: 190 }}>
-          <div style={{ width: 11, height: 11, border: '1.5px solid oklch(0.62 0.02 265)', borderRadius: '50%' }} />
+          <div style={{ width: 11, height: 11, flex: '0 0 11px', border: '1.5px solid oklch(0.62 0.02 265)', borderRadius: '50%' }} />
           <input
+            type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="ค้นหาเลขที่ permit, ผู้รับเหมา"
+            onChange={(e) => onQuery(e.target.value)}
+            placeholder="ค้นหาเลขที่ permit, ผู้รับเหมา, พื้นที่"
+            aria-label="ค้นหา Permit"
             style={{ border: 'none', background: 'none', outline: 'none', fontSize: 12.5, width: '100%', color: 'inherit' }}
           />
         </div>

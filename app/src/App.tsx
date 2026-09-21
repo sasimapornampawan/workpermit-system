@@ -28,6 +28,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
   const { session, profile, loading, reloadProfile } = useAuth();
   const [screen, setScreen] = useState<Screen>(defaultScreen);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [query, setQuery] = useState('');
   // Kept at app level so progress survives switching between menu screens.
   const [badge, setBadge] = useState(0);
   const [step, setStep] = useState(1);
@@ -39,6 +40,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
     setScreen(defaultScreen);
     setStep(1);
     setDraft(EMPTY_DRAFT);
+    setQuery('');
   }, [userId, defaultScreen]);
 
   if (loading) return <AuthMessage>กำลังตรวจสอบการเข้าสู่ระบบ...</AuthMessage>;
@@ -66,9 +68,19 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
       <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '100vh', fontFamily: SANS, color: C.ink, fontSize: 14, lineHeight: 1.5 }}>
         <Sidebar screen={current} screens={screens} onNavigate={setScreen} onChangePassword={() => setChangingPassword(true)} bilingual={showEnglishLabels} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          <Topbar title={title} subtitle={subtitle} onNewPermit={screens.includes('permits') ? () => setScreen('permits') : undefined} />
+          <Topbar
+            title={title}
+            subtitle={subtitle}
+            query={query}
+            onQuery={(q) => {
+              setQuery(q);
+              // Search results are shown in the dashboard's permit table.
+              if (q.trim()) setScreen('dashboard');
+            }}
+            onNewPermit={screens.includes('permits') ? () => setScreen('permits') : undefined}
+          />
           <main style={{ flex: 1, padding: '20px 24px 40px' }}>
-            {current === 'dashboard' && <Dashboard />}
+            {current === 'dashboard' && <Dashboard query={query} />}
             {current === 'contractors' && <Contractors />}
             {current === 'badges' && <Badges selected={badge} onSelect={setBadge} />}
             {current === 'training' && <Training />}

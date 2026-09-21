@@ -24,10 +24,6 @@ export const SCREEN_META: Record<Screen, [title: string, subtitle: string]> = {
   users: ['จัดการผู้ใช้', 'บัญชีผู้ใช้ บทบาท และสิทธิ์การเข้าถึงระบบ'],
 };
 
-/* ---------- Dashboard ---------- */
-
-export const DASH_FILTERS = ['ทั้งหมด', 'ความเสี่ยงสูง', 'ใกล้หมดอายุ'];
-
 /* ---------- Findings ---------- */
 
 export const FINDING_CATEGORIES = [
@@ -70,12 +66,13 @@ export const PERMIT_TYPES: { name: string; detail: string; level: string; tone: 
   { name: 'งานทั่วไปในพื้นที่ผลิต', detail: 'งานบำรุงรักษาที่ไม่เข้าข่ายงานเสี่ยงสูง', level: 'ความเสี่ยงต่ำ', tone: 'ok', code: 'GN-08' },
 ];
 
-export const ATTACHMENTS = [
-  { ok: true, label: 'แผนการปฏิบัติงาน (Method Statement)', file: 'method-statement-hs12.pdf' },
-  { ok: true, label: 'ผลการตรวจวัดก๊าซ', file: 'gas-test-20690915-0730.pdf' },
-  { ok: true, label: 'ใบรับรองการอบรมผู้ปฏิบัติงาน', file: 'training-cert-5-persons.pdf' },
-  { ok: true, label: 'ใบตรวจสอบเครื่องมือและอุปกรณ์', file: 'tool-inspection-0914.pdf' },
-  { ok: false, label: 'กรมธรรม์ประกันภัยที่ยังไม่หมดอายุ', file: 'ยังไม่ได้แนบไฟล์' },
+export const ATTACHMENT_KINDS = [
+  'แผนการปฏิบัติงาน (Method Statement)',
+  'ผลการตรวจวัดก๊าซ',
+  'ใบรับรองการอบรมผู้ปฏิบัติงาน',
+  'ใบตรวจสอบเครื่องมือและอุปกรณ์',
+  'กรมธรรม์ประกันภัยที่ยังไม่หมดอายุ',
+  'เอกสารอื่น ๆ',
 ];
 
 export const HAZARDS: { hazard: string; control: string; level: string; tone: Tone }[] = [

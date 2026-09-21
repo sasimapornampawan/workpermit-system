@@ -6,6 +6,7 @@ import {
   type Permit, type PermitAction,
 } from '../lib/supabase';
 import { C, L, MONO, tone, type Tone } from '../theme';
+import { PermitAttachments } from './Attachments';
 import { Button, FormMessage, TextArea } from './form';
 import { Card, DataState, Pill } from './ui';
 
@@ -149,6 +150,10 @@ export function PermitDetail({ permit, onClose }: { permit: Permit; onClose: () 
               );
             })}
           </div>
+        </div>
+
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${L.headBd}` }}>
+          <PermitAttachments permitId={permit.id} canUpload={profile.role !== 'manager'} />
         </div>
       </Card>
     </div>

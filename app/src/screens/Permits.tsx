@@ -1,14 +1,18 @@
 import { useState, type ChangeEvent } from 'react';
 import { Button, Field, FormMessage, Select, TextArea, TextInput } from '../components/form';
-import { Card, CheckItem, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
-import { ATTACHMENTS, HAZARDS, PERMIT_TYPES, PPE, STEPS } from '../data';
+import { AttachmentPicker, type DraftFile } from '../components/Attachments';
+import { Card, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
+import { HAZARDS, PERMIT_TYPES, PPE, STEPS } from '../data';
+import { uploadPermitFile } from '../lib/attachments';
 import { useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useBadges, useContractors } from '../hooks/useData';
 import { ROLE_LABEL, asTone, badgeStatus, riskTone, supabase, type Badge, type Contractor, type Profile } from '../lib/supabase';
 import { C, L, MONO, tone, type Tone } from '../theme';
 
-export type PermitDraft = { title: string; contractorId: string; area: string; detail: string; startAt: string; endAt: string; workers: string };
-export const EMPTY_DRAFT: PermitDraft = { title: '', contractorId: '', area: '', detail: '', startAt: '', endAt: '', workers: '' };
+export type PermitDraft = {
+  title: string; contractorId: string; area: string; detail: string; startAt: string; endAt: string; workers: string; files: DraftFile[];
+};
+export const EMPTY_DRAFT: PermitDraft = { title: '', contractorId: '', area: '', detail: '', startAt: '', endAt: '', workers: '', files: [] };
 
 type Props = {
   step: number; onStep: (n: number) => void;
@@ -67,16 +71,25 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
         end_at: new Date(draft.endAt).toISOString(),
         workers: draft.workers ? Number(draft.workers) : null,
       })
-      .select('permit_no')
+      .select('id, permit_no')
       .single();
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       setResult({ error: true, text: `ส่งไม่สำเร็จ: ${error.message}` });
       return;
     }
+
+    const failures: string[] = [];
+    for (const { kind, file } of draft.files) {
+      const failure = await uploadPermitFile(data.id, kind, file);
+      if (failure) failures.push(failure);
+    }
+    setSubmitting(false);
     onDraft(EMPTY_DRAFT);
     onStep(1);
-    setResult({ error: false, text: `ส่งขออนุมัติแล้ว — เลขที่ ${data.permit_no}` });
+    setResult(failures.length
+      ? { error: true, text: `ส่งขออนุมัติแล้ว — เลขที่ ${data.permit_no} แต่แนบไฟล์ไม่สำเร็จ ${failures.length} ไฟล์ (${failures.join(' · ')}) ให้แนบใหม่ในหน้ารายละเอียด Permit` }
+      : { error: false, text: `ส่งขออนุมัติแล้ว — เลขที่ ${data.permit_no}${draft.files.length ? ` พร้อมเอกสารแนบ ${draft.files.length} ไฟล์` : ''}` });
     notifyDataChanged();
   }
 
@@ -196,14 +209,8 @@ function StepDetails({ draft, onDraft, contractors, contractorId, lockedName }: 
         </div>
       </Card>
       <Card style={{ padding: 18 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>เอกสารแนบที่กำหนด</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          {ATTACHMENTS.map((a) => <CheckItem key={a.label} ok={a.ok} label={a.label} detail={a.file} mono />)}
-        </div>
-        <div className="h-drop" style={{ marginTop: 12, border: '1px dashed oklch(0.85 0.01 265)', borderRadius: 8, padding: 16, textAlign: 'center', background: 'oklch(0.985 0.004 265)', cursor: 'pointer' }}>
-          <div style={{ fontSize: 12.5, fontWeight: 500, color: 'oklch(0.42 0.1 265)' }}>ลากไฟล์มาวาง หรือเลือกไฟล์</div>
-          <div style={{ fontFamily: MONO, fontSize: 10.5, color: 'oklch(0.58 0.02 265)', marginTop: 4 }}>PDF, JPG — ไม่เกิน 10 MB</div>
-        </div>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>เอกสารแนบ</div>
+        <AttachmentPicker files={draft.files} onChange={(files) => onDraft({ ...draft, files })} />
       </Card>
     </div>
   );

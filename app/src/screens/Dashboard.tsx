@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button, FormMessage } from '../components/form';
 import { PermitDetail } from '../components/PermitDetail';
 import { Bar, Card, CardTitle, DataState, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
-import { DASH_FILTERS } from '../data';
 import { useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useAlerts, useContractors, useFindings, usePermits } from '../hooks/useData';
 import { countBy, pct, sameMonth } from '../lib/stats';
@@ -20,7 +19,16 @@ function alertTime(iso: string, now: Date) {
     : d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
 }
 
-export function Dashboard() {
+const FILTERS = [['all', 'ทั้งหมด'], ['high', 'ความเสี่ยงสูง'], ['expiring', 'ใกล้หมดอายุ']] as const;
+type Filter = (typeof FILTERS)[number][0];
+
+const LIVE_STATUSES = ['approved', 'active', 'suspended'];
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Approved or running permits that end within 24 hours, or have already passed their end time. */
+const expiresSoon = (p: Permit, nowMs: number) => LIVE_STATUSES.includes(p.status) && !!p.end_at && new Date(p.end_at).getTime() - nowMs < DAY_MS;
+
+export function Dashboard({ query }: { query: string }) {
   const permits = usePermits();
   const contractors = useContractors();
   const findings = useFindings();
@@ -31,6 +39,17 @@ export function Dashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = permits.data.find((p) => p.id === selectedId);
   const sortedPermits = [...permits.data].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const [filter, setFilter] = useState<Filter>('all');
+  const nowMs = now.getTime();
+  const q = query.trim().toLowerCase();
+  const matchesQuery = (p: Permit) => !q || [p.permit_no, p.type, p.area, p.contractors?.name ?? ''].some((s) => s.toLowerCase().includes(q));
+  const inFilter: Record<Filter, (p: Permit) => boolean> = {
+    all: () => true,
+    high: (p) => p.risk === 'สูง',
+    expiring: (p) => expiresSoon(p, nowMs),
+  };
+  const searched = sortedPermits.filter(matchesQuery);
+  const visiblePermits = searched.filter(inFilter[filter]);
 
   const byStatus = (s: string) => permits.data.filter((p) => p.status === s).length;
   const onSite = contractors.data.filter((c) => c.status !== 'bad');
@@ -102,19 +121,36 @@ export function Dashboard() {
 
       <Card style={{ overflowX: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderBottom: `1px solid ${L.headBd}` }}>
-          <CardTitle title="Permit ทั้งหมด" sub="คลิกรายการเพื่อดูรายละเอียด ประวัติ และเปลี่ยนสถานะงาน" style={{ flex: 1 }} />
-          {DASH_FILTERS.map((label, i) => {
-            const on = i === 0;
+          <CardTitle
+            title="Permit ทั้งหมด"
+            sub={q ? `ผลการค้นหา "${query.trim()}" — ${visiblePermits.length} รายการ` : 'คลิกรายการเพื่อดูรายละเอียด เอกสารแนบ ประวัติ และเปลี่ยนสถานะงาน'}
+            style={{ flex: 1 }}
+          />
+          {FILTERS.map(([value, label]) => {
+            const on = filter === value;
             return (
-              <div key={label} style={{ padding: '5px 11px', borderRadius: 20, fontSize: 11.5, cursor: 'pointer', border: `1px solid ${on ? C.ink : C.gryBd}`, background: on ? C.ink : '#fff', color: on ? '#fff' : C.gryFg }}>
-                {label}
+              <div
+                key={value}
+                role="button"
+                tabIndex={0}
+                aria-pressed={on}
+                onClick={() => setFilter(value)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setFilter(value)}
+                style={{ padding: '5px 11px', borderRadius: 20, fontSize: 11.5, cursor: 'pointer', whiteSpace: 'nowrap', border: `1px solid ${on ? C.ink : C.gryBd}`, background: on ? C.ink : '#fff', color: on ? '#fff' : C.gryFg }}
+              >
+                {label} ({searched.filter(inFilter[value]).length})
               </div>
             );
           })}
         </div>
         <TableHead columns={COLS} minWidth={900} labels={['เลขที่', 'ประเภทงาน', 'ผู้รับเหมา', 'พื้นที่', 'ความเสี่ยง', 'วันที่สร้าง', 'สถานะ']} />
-        <DataState loading={permits.loading} error={permits.error} count={permits.data.length} />
-        {sortedPermits.map((r) => {
+        <DataState
+          loading={permits.loading}
+          error={permits.error}
+          count={visiblePermits.length}
+          empty={permits.data.length ? 'ไม่พบ Permit ที่ตรงกับเงื่อนไข' : 'ยังไม่มีข้อมูล'}
+        />
+        {visiblePermits.map((r) => {
           const [statusLabel, statusTone] = permitStatus(r.status);
           const on = r.id === selectedId;
           return (
@@ -131,7 +167,14 @@ export function Dashboard() {
               <div style={{ fontSize: 12.5, color: 'oklch(0.5 0.02 265)', ...ellipsis }}>{r.area}</div>
               <div><Pill t={riskTone(r.risk)}>{r.risk}</Pill></div>
               <div style={{ fontFamily: MONO, fontSize: 11.5, color: 'oklch(0.5 0.02 265)' }}>{new Date(r.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}</div>
-              <div><Pill t={statusTone}>{statusLabel}</Pill></div>
+              <div>
+                <Pill t={statusTone}>{statusLabel}</Pill>
+                {expiresSoon(r, nowMs) && r.end_at && (
+                  <div style={{ fontFamily: MONO, fontSize: 10, marginTop: 3, color: tone(new Date(r.end_at).getTime() < nowMs ? 'bad' : 'warn').fg }}>
+                    {new Date(r.end_at).getTime() < nowMs ? 'เลยเวลา' : 'หมด'} {new Date(r.end_at).toLocaleString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                )}
+              </div>
             </TableRow>
           );
         })}
