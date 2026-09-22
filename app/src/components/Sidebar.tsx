@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { BRAND } from '../brand';
+import { UI_SCALES, applyUiScale, getUiScale } from '../lib/uiScale';
 import { NAV, type Screen } from '../data';
 import { BrandMark } from './BrandMark';
 import { signOut, useProfile } from '../hooks/useAuth';
@@ -14,6 +16,7 @@ const footerButton = {
 } as const;
 
 export function Sidebar({ screen, screens, onNavigate, onChangePassword, bilingual }: Props) {
+  const [scale, setScale] = useState(getUiScale);
   const profile = useProfile();
   const contractors = useContractors();
   const badges = useBadges();
@@ -29,7 +32,7 @@ export function Sidebar({ screen, screens, onNavigate, onChangePassword, bilingu
   const initials = profile.full_name.replace(/^(นางสาว|นาง|นาย)\s*/, '').slice(0, 2);
 
   return (
-    <aside style={{ width: 232, flex: '0 0 232px', background: L.navy, color: 'oklch(0.97 0.01 265)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh' }}>
+    <aside style={{ width: 232, flex: '0 0 232px', background: L.navy, color: 'oklch(0.97 0.01 265)', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: 'var(--screen-h)' }}>
       <div style={{ padding: '20px 18px 18px', borderBottom: '1px solid oklch(0.3 0.04 265)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <BrandMark height={26} />
@@ -73,6 +76,29 @@ export function Sidebar({ screen, screens, onNavigate, onChangePassword, bilingu
           <div style={{ fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{profile.full_name}</div>
           <div style={{ fontSize: 10.5, color: 'oklch(0.7 0.03 265)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ROLE_LABEL[profile.role]}</div>
         </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 10.5, color: 'oklch(0.7 0.03 265)', flex: 1 }}>ขนาดตัวอักษร</span>
+          {UI_SCALES.map((s, i) => {
+            const on = s.value === scale;
+            return (
+              <button
+                key={s.value}
+                type="button"
+                title={s.label}
+                aria-label={`ขนาดตัวอักษร${s.label}`}
+                aria-pressed={on}
+                onClick={() => {
+                  applyUiScale(s.value, true);
+                  setScale(s.value);
+                }}
+                className={on ? undefined : 'h-nav'}
+                style={{ width: 26, height: 24, borderRadius: 5, cursor: 'pointer', fontSize: 10 + i * 2.5, fontWeight: 600, lineHeight: 1, border: `1px solid ${on ? 'oklch(0.68 0.17 265)' : 'oklch(0.36 0.05 265)'}`, background: on ? 'oklch(0.3 0.05 265)' : 'transparent', color: 'oklch(0.92 0.02 265)' }}
+              >
+                ก
+              </button>
+            );
+          })}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button type="button" onClick={onChangePassword} className="h-nav" style={footerButton}>เปลี่ยนรหัสผ่าน</button>

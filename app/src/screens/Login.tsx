@@ -8,7 +8,7 @@ import { C, L, MONO, SANS } from '../theme';
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', boxSizing: 'border-box', fontFamily: SANS, color: C.ink, fontSize: 14, lineHeight: 1.5 }}>
+    <div style={{ minHeight: 'var(--screen-h)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', boxSizing: 'border-box', fontFamily: SANS, color: C.ink, fontSize: 14, lineHeight: 1.5 }}>
       <div style={{ width: '100%', maxWidth: 380, background: '#fff', border: `1px solid ${L.cardBd}`, borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ background: L.navy, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 12, color: '#fff' }}>
           <BrandMark height={34} />

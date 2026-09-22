@@ -65,7 +65,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
 
   return (
     <ProfileContext.Provider value={profile}>
-      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '100vh', fontFamily: SANS, color: C.ink, fontSize: 14, lineHeight: 1.5 }}>
+      <div style={{ display: 'flex', alignItems: 'stretch', minHeight: 'var(--screen-h)', fontFamily: SANS, color: C.ink, fontSize: 14, lineHeight: 1.5 }}>
         <Sidebar screen={current} screens={screens} onNavigate={setScreen} onChangePassword={() => setChangingPassword(true)} bilingual={showEnglishLabels} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <Topbar

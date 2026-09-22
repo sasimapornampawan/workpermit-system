@@ -1,4 +1,9 @@
 html, body { margin: 0; padding: 0; }
+
+/* Page size setting (lib/uiScale.ts). CSS zoom also scales vh, so full-height
+   elements use --screen-h instead of 100vh to stay exactly one screen tall. */
+:root { --ui-scale: 1; --screen-h: calc(100vh / var(--ui-scale)); }
+html { zoom: var(--ui-scale); }
 body { background: oklch(0.98 0.005 265); -webkit-font-smoothing: antialiased; }
 a { color: oklch(0.52 0.16 265); text-decoration: none; }
 a:hover { color: oklch(0.42 0.16 265); text-decoration: underline; }
@@ -23,6 +28,7 @@ input, select, textarea, button { font-family: inherit; }
 .print-only { display: none; }
 @media print {
   @page { size: A4 portrait; margin: 12mm; }
+  html { zoom: 1 !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
   body[data-print="badge"] #root { display: none !important; }
