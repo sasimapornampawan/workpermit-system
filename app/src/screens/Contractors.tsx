@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Button, Field, FormMessage, Select, TextInput } from '../components/form';
-import { Card, DataState, OutlineButton, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
+import { ImportButton, ImportPanel } from '../components/ExcelImport';
+import { Card, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
 import { useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useBadges, useContractors } from '../hooks/useData';
 import { countBy } from '../lib/stats';
@@ -14,6 +15,7 @@ export function Contractors() {
   const { data, loading, error } = useContractors();
   const badges = useBadges();
   const [editing, setEditing] = useState<Contractor | 'new' | null>(null);
+  const [importFile, setImportFile] = useState<File | null>(null);
   const isSafety = profile.role === 'safety';
   const contractors = [...data].sort((a, b) => a.code.localeCompare(b.code));
   const issuedByCompany = countBy(badges.data.filter((b) => b.status === 'issued'), (b) => b.company);
@@ -35,6 +37,10 @@ export function Contractors() {
         ))}
       </div>
 
+      {importFile && (
+        <ImportPanel key={`${importFile.name}-${importFile.lastModified}`} file={importFile} contractors={data} onClose={() => setImportFile(null)} />
+      )}
+
       {editing && (
         <ContractorForm key={editing === 'new' ? 'new' : editing.id} contractor={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />
       )}
@@ -47,7 +53,8 @@ export function Contractors() {
           </div>
           {isSafety && (
             <>
-              <OutlineButton style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12 }}>นำเข้าไฟล์ Excel</OutlineButton>
+              <a href="/import-template.xlsx" download="แม่แบบนำเข้าข้อมูล-Workpermit.xlsx" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>ดาวน์โหลดแม่แบบ</a>
+              <ImportButton onFile={setImportFile} />
               <Button disabled={editing === 'new'} onClick={() => setEditing('new')} style={{ padding: '6px 12px', fontSize: 12 }}>+ เพิ่มผู้รับเหมา</Button>
             </>
           )}
