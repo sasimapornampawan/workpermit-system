@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { PERMISSIONS, type PermissionKey } from '../lib/permissions';
 import { Button, Field, FormMessage, Select, TextInput } from '../components/form';
 import { Card, CardTitle, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
 import { USERNAME_DOMAIN, displayLogin, toLoginEmail, useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useAdminUsers, useContractors } from '../hooks/useData';
 import { MIN_PASSWORD, ROLE_LABEL, callAdminFunction, supabase, type AdminUser, type Contractor, type Role } from '../lib/supabase';
-import { C, L, MONO, type Tone } from '../theme';
+import { C, L, MONO, tone, type Tone } from '../theme';
 
 const COLS = 'minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 128px 118px';
 const ROLES = Object.keys(ROLE_LABEL) as Role[];
@@ -103,6 +104,84 @@ export function Users() {
           );
         })}
       </Card>
+    </div>
+  );
+}
+
+type PermissionRow = { permission: PermissionKey; role_default: boolean; override: boolean | null };
+
+/** Per-user overrides on top of the role defaults; each change is saved immediately. */
+function PermissionsEditor({ user }: { user: AdminUser }) {
+  const [rows, setRows] = useState<PermissionRow[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let cancelled = false;
+    supabase.rpc('admin_list_permissions', { p_user_id: user.id }).then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) setMessage({ error: true, text: `โหลดสิทธิ์ไม่สำเร็จ: ${error.message}` });
+      setRows((data as PermissionRow[] | null) ?? []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user.id]);
+
+  async function change(permission: PermissionKey, choice: 'default' | 'allow' | 'deny') {
+    if (!supabase) return;
+    const allowed = choice === 'default' ? null : choice === 'allow';
+    setBusy(permission);
+    setMessage(null);
+    const { error } = await supabase.rpc('admin_set_permission', { p_user_id: user.id, p_permission: permission, p_allowed: allowed });
+    setBusy(null);
+    if (error) {
+      setMessage({ error: true, text: `บันทึกไม่สำเร็จ: ${error.message}` });
+      return;
+    }
+    setRows((current) => (current ?? []).map((r) => (r.permission === permission ? { ...r, override: allowed } : r)));
+    setMessage({ error: false, text: 'บันทึกสิทธิ์แล้ว ผู้ใช้ต้องรีเฟรชหน้าเว็บจึงจะเห็นผล' });
+  }
+
+  const byKey = new Map((rows ?? []).map((r) => [r.permission, r]));
+
+  return (
+    <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${L.headBd}` }}>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>สิทธิ์การใช้งานรายฟังก์ชัน</div>
+      <div style={{ fontSize: 11.5, color: C.mut, marginBottom: 10 }}>
+        ค่าเริ่มต้นมาจากบทบาท {user.role ? ROLE_LABEL[user.role] : ''} เลือก "อนุญาต" หรือ "ห้าม" เพื่อกำหนดเฉพาะคนนี้
+      </div>
+      {!rows && <div style={{ fontSize: 12.5, color: C.mut }}>กำลังโหลดสิทธิ์...</div>}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {rows && PERMISSIONS.map(({ key, label, detail }) => {
+          const row = byKey.get(key);
+          if (!row) return null;
+          const effective = row.override ?? row.role_default;
+          const choice = row.override === null ? 'default' : row.override ? 'allow' : 'deny';
+          return (
+            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 7, border: `1px solid ${L.idle}`, background: effective ? tone('ok').bg : '#fff' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 500 }}>{label}</div>
+                <div style={{ fontSize: 11, color: C.mut }}>{detail}</div>
+              </div>
+              <Pill t={effective ? 'ok' : 'flat'}>{effective ? 'ใช้ได้' : 'ใช้ไม่ได้'}</Pill>
+              <Select
+                value={choice}
+                disabled={busy === key}
+                onChange={(e) => change(key, e.target.value as 'default' | 'allow' | 'deny')}
+                aria-label={`สิทธิ์ ${label}`}
+                style={{ width: 150, padding: '5px 8px', fontSize: 12 }}
+              >
+                <option value="default">ตามบทบาท ({row.role_default ? 'ใช้ได้' : 'ใช้ไม่ได้'})</option>
+                <option value="allow">อนุญาต</option>
+                <option value="deny">ห้าม</option>
+              </Select>
+            </div>
+          );
+        })}
+      </div>
+      {message && <FormMessage error={message.error} style={{ marginTop: 10 }}>{message.text}</FormMessage>}
     </div>
   );
 }
@@ -276,6 +355,8 @@ function UserEditor({ user, isSelf, contractors, onClose }: { user: AdminUser; i
           <Button type="submit" disabled={busy !== null}>{busy === 'save' ? 'กำลังบันทึก...' : 'บันทึกบทบาท'}</Button>
         </div>
       </form>
+
+      {user.role && user.active && <PermissionsEditor user={user} />}
 
       <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${L.headBd}`, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, alignItems: 'end' }}>
         <PasswordField label="ตั้งรหัสผ่านใหม่" value={password} onChange={setPassword} />

@@ -57,9 +57,6 @@ export async function callAdminFunction(body: Record<string, unknown>): Promise<
   return { data: data as Record<string, unknown>, error: null };
 }
 
-/** Roles allowed to change a permit's status on site; the database enforces the same rule. */
-export const STATUS_ROLES: Role[] = ['safety', 'area_owner'];
-
 export type PermitAction = 'start' | 'suspend' | 'resume' | 'close';
 
 /** Mirrors change_permit_status in SUPABASE_PHASE4_STATUS.sql, which is the authority. */

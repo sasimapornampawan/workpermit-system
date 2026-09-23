@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { useProfile } from '../hooks/useAuth';
+import { useCan } from '../hooks/useAuth';
 import { notifyDataChanged, usePermitApprovals, usePermitEvents } from '../hooks/useData';
 import {
-  PERMIT_ACTIONS, ROLE_LABEL, STATUS_ROLES, permitStatus, riskTone, supabase,
+  PERMIT_ACTIONS, ROLE_LABEL, permitStatus, riskTone, supabase,
   type Permit, type PermitAction,
 } from '../lib/supabase';
 import { C, L, MONO, tone, type Tone } from '../theme';
@@ -15,7 +15,7 @@ const formatDateTime = (iso: string) => new Date(iso).toLocaleString('th-TH', { 
 type HistoryItem = { at: string; title: string; by: string | null; note: string | null; tone: Tone };
 
 export function PermitDetail({ permit, onClose }: { permit: Permit; onClose: () => void }) {
-  const profile = useProfile();
+  const can = useCan();
   const approvals = usePermitApprovals();
   const events = usePermitEvents();
   const [note, setNote] = useState('');
@@ -31,7 +31,7 @@ export function PermitDetail({ permit, onClose }: { permit: Permit; onClose: () 
 
   const [statusLabel, statusTone] = permitStatus(permit.status);
   const actions = (Object.keys(PERMIT_ACTIONS) as PermitAction[]).filter((a) => PERMIT_ACTIONS[a].from.includes(permit.status));
-  const canAct = STATUS_ROLES.includes(profile.role) && actions.length > 0;
+  const canAct = can('manage_permit_status') && actions.length > 0;
 
   const submitted: HistoryItem = { at: permit.created_at, title: 'ยื่นคำขอ', by: null, note: null, tone: 'info' };
   const history: HistoryItem[] = [
@@ -153,7 +153,7 @@ export function PermitDetail({ permit, onClose }: { permit: Permit; onClose: () 
         </div>
 
         <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${L.headBd}` }}>
-          <PermitAttachments permitId={permit.id} canUpload={profile.role !== 'manager'} />
+          <PermitAttachments permitId={permit.id} canUpload={can('request_permits') || can('manage_permit_status')} />
         </div>
       </Card>
     </div>

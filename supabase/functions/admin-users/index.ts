@@ -27,8 +27,16 @@ Deno.serve(async (req) => {
   const { data: auth } = await admin.auth.getUser(token);
   if (!auth?.user) return reply(401, { error: 'กรุณาเข้าสู่ระบบใหม่' });
 
+  // Same rule as the database's can('manage_users'): the user's override, else their role's default.
   const { data: me } = await admin.from('profiles').select('role, active').eq('id', auth.user.id).maybeSingle();
-  if (me?.role !== 'safety' || !me.active) return reply(403, { error: 'เฉพาะ จป. เท่านั้น' });
+  if (!me?.active) return reply(403, { error: 'บัญชีนี้ถูกปิดสิทธิ์' });
+  const [{ data: override }, { data: roleDefault }] = await Promise.all([
+    admin.from('user_permissions').select('allowed').eq('user_id', auth.user.id).eq('permission', 'manage_users').maybeSingle(),
+    admin.from('role_permissions').select('allowed').eq('role', me.role).eq('permission', 'manage_users').maybeSingle(),
+  ]);
+  if (!(override?.allowed ?? roleDefault?.allowed ?? me.role === 'safety')) {
+    return reply(403, { error: 'ไม่มีสิทธิ์จัดการผู้ใช้' });
+  }
 
   let body: Record<string, unknown>;
   try {

@@ -9,7 +9,7 @@ import { BrandMark } from '../components/BrandMark';
 import { Button, FormMessage } from '../components/form';
 import { Card, CardTitle, CheckItem, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
 import { BADGE_CHECKS } from '../data';
-import { useProfile } from '../hooks/useAuth';
+import { useCan, useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useBadges, useContractors } from '../hooks/useData';
 import { asTone, badgeStatus, supabase, type Badge } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
@@ -18,6 +18,7 @@ const COLS = 'minmax(0, 1.4fr) minmax(0, 1.2fr) 108px 120px 96px';
 
 export function Badges({ selected, onSelect }: { selected: number; onSelect: (i: number) => void }) {
   const profile = useProfile();
+  const can = useCan();
   const { data, loading, error } = useBadges();
   const contractors = useContractors();
   const [editing, setEditing] = useState<Badge | 'new' | null>(null);
@@ -27,8 +28,9 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
   const queue = [...data].sort((a, b) => a.created_at.localeCompare(b.created_at));
   const current = queue.length ? queue[Math.min(selected, queue.length - 1)] : null;
   const pending = queue.filter((b) => b.status !== 'issued').length;
-  const isSafety = profile.role === 'safety';
-  const canRequest = isSafety || profile.role === 'contractor';
+  const canManageBadges = can('manage_badges');
+  const isSafety = canManageBadges && profile.role !== 'contractor';
+  const canRequest = canManageBadges;
 
   function select(i: number) {
     setMessage(null);
@@ -113,7 +115,7 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
       {current && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 88 }}>
           <BadgePreview badge={current} />
-          {(isSafety || profile.role === 'contractor') && (
+          {canManageBadges && (
             <PhotoPicker
               badge={current}
               onResult={(m) => {

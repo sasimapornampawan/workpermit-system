@@ -3,7 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { NAV, SCREEN_META, type Screen } from './data';
 import { ProfileContext, useAuth } from './hooks/useAuth';
-import type { Role } from './lib/supabase';
+import type { PermissionKey } from './lib/permissions';
 import { Badges } from './screens/Badges';
 import { Contractors } from './screens/Contractors';
 import { Dashboard } from './screens/Dashboard';
@@ -17,11 +17,11 @@ import { C, SANS } from './theme';
 
 type AppProps = { defaultScreen?: Screen; showEnglishLabels?: boolean };
 
-const HIDDEN_SCREENS: Record<Role, Screen[]> = {
-  safety: [],
-  contractor: ['reports', 'users'],
-  area_owner: ['permits', 'users'],
-  manager: ['permits', 'users'],
+/** Menu entries that need a permission; the rest are visible to every signed-in user. */
+const SCREEN_PERMISSION: Partial<Record<Screen, PermissionKey>> = {
+  permits: 'request_permits',
+  reports: 'view_reports',
+  users: 'manage_users',
 };
 
 export default function App({ defaultScreen = 'dashboard', showEnglishLabels = true }: AppProps) {
@@ -59,7 +59,10 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
     );
   }
 
-  const screens = NAV.map((n) => n.id).filter((id) => !HIDDEN_SCREENS[profile.role].includes(id));
+  const screens = NAV.map((n) => n.id).filter((id) => {
+    const needed = SCREEN_PERMISSION[id];
+    return !needed || profile.permissions.includes(needed);
+  });
   const current = screens.includes(screen) ? screen : 'dashboard';
   const [title, subtitle] = SCREEN_META[current];
 

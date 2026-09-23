@@ -3,7 +3,7 @@ import { BRAND } from '../brand';
 import { BrandMark } from '../components/BrandMark';
 import { Button, Field, FormMessage, Select, TextInput } from '../components/form';
 import { Bar, Card, DataState, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
-import { useProfile } from '../hooks/useAuth';
+import { useCan } from '../hooks/useAuth';
 import { notifyDataChanged, useContractors, useFindings, useMonthlyReports, usePermits, useRecommendations } from '../hooks/useData';
 import { printWith } from '../lib/print';
 import { countBy, localDate, pct, sameMonth } from '../lib/stats';
@@ -26,8 +26,8 @@ const monthStart = (key: string) => {
 };
 
 export function Reports() {
-  const profile = useProfile();
-  const isSafety = profile.role === 'safety';
+  const can = useCan();
+  const isSafety = can('manage_reports_data');
   const permits = usePermits();
   const contractors = useContractors();
   const findings = useFindings();

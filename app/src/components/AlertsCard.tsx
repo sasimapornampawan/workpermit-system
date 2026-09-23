@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useProfile } from '../hooks/useAuth';
+import { useCan, useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useAlerts } from '../hooks/useData';
 import { asTone, supabase } from '../lib/supabase';
 import { MONO, tone } from '../theme';
@@ -18,11 +18,12 @@ function alertTime(iso: string, now: Date) {
 
 export function AlertsCard({ now }: { now: Date }) {
   const profile = useProfile();
+  const can = useCan();
   const alerts = useAlerts();
   const [adding, setAdding] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const canManage = profile.role === 'safety' || profile.role === 'area_owner';
+  const canManage = can('manage_alerts');
 
   const open = alerts.data
     .filter((a) => !a.closed_at)

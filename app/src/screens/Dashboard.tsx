@@ -3,7 +3,7 @@ import { Button, FormMessage } from '../components/form';
 import { AlertsCard } from '../components/AlertsCard';
 import { PermitDetail } from '../components/PermitDetail';
 import { Bar, Card, CardTitle, DataState, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
-import { useProfile } from '../hooks/useAuth';
+import { useCan, useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useContractors, useFindings, usePermits } from '../hooks/useData';
 import { countBy, pct, sameMonth } from '../lib/stats';
 import { APPROVER_ROLES, ROLE_LABEL, permitStatus, riskTone, supabase, type Permit, type Role } from '../lib/supabase';
@@ -25,6 +25,7 @@ export function Dashboard({ query }: { query: string }) {
   const contractors = useContractors();
   const findings = useFindings();
   const profile = useProfile();
+  const can = useCan();
   const now = new Date();
   const waitingForMe = permits.data.filter((p) => p.permit_next_step === profile.role);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function Dashboard({ query }: { query: string }) {
         {kpis.map((k) => <StatTile key={k.label} {...k} />)}
       </div>
 
-      {APPROVER_ROLES.includes(profile.role) && (
+      {can('approve_permits') && APPROVER_ROLES.includes(profile.role) && (
         <ApprovalQueue permits={waitingForMe} loading={permits.loading} error={permits.error} role={profile.role} />
       )}
 

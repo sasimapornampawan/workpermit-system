@@ -1,6 +1,10 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState } from 'react';
+import type { PermissionKey } from '../lib/permissions';
 import { supabase, type Profile } from '../lib/supabase';
+
+/** The signed-in user with the permissions the database grants them. */
+export type CurrentUser = Profile & { permissions: PermissionKey[] };
 
 // Supabase Auth needs an email, so username-only accounts are created as <username>@USERNAME_DOMAIN.
 export const USERNAME_DOMAIN = 'workpermit.local';
@@ -16,7 +20,7 @@ export const displayLogin = (email: string) =>
 /** undefined = not known yet, null = known to be absent */
 export function useAuth() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  const [profile, setProfile] = useState<CurrentUser | null | undefined>(undefined);
   const [profileVersion, setProfileVersion] = useState(0);
 
   useEffect(() => {
@@ -38,17 +42,19 @@ export function useAuth() {
     }
     setProfile(undefined);
     // '*' rather than naming `active`, so this keeps working before that column exists.
-    supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle()
-      .then(({ data }) => {
-        const row = data as (Profile & { active?: boolean }) | null;
-        setProfile(row && row.active !== false
-          ? { id: row.id, full_name: row.full_name, role: row.role, contractor_id: row.contractor_id, must_change_password: row.must_change_password === true }
-          : null);
-      });
+    Promise.all([
+      supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+      supabase.rpc('my_permissions'),
+    ]).then(([{ data }, { data: permissions }]) => {
+      const row = data as (Profile & { active?: boolean }) | null;
+      setProfile(row && row.active !== false
+        ? {
+          id: row.id, full_name: row.full_name, role: row.role, contractor_id: row.contractor_id,
+          must_change_password: row.must_change_password === true,
+          permissions: (permissions as PermissionKey[] | null) ?? [],
+        }
+        : null);
+    });
   }, [userId, profileVersion]);
 
   return {
@@ -61,10 +67,16 @@ export function useAuth() {
 
 export const signOut = () => supabase?.auth.signOut();
 
-export const ProfileContext = createContext<Profile | null>(null);
+export const ProfileContext = createContext<CurrentUser | null>(null);
 
 export function useProfile() {
   const profile = useContext(ProfileContext);
   if (!profile) throw new Error('useProfile must be used inside ProfileContext');
   return profile;
+}
+
+/** can('manage_badges') — true when the database would allow it. */
+export function useCan() {
+  const profile = useProfile();
+  return (permission: PermissionKey) => profile.permissions.includes(permission);
 }

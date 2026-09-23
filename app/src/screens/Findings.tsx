@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Button, Field, FormMessage, Select, TextArea, TextInput } from '../components/form';
 import { Card, CardTitle, DataState, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
 import { FINDING_CATEGORIES } from '../data';
-import { useProfile } from '../hooks/useAuth';
+import { useCan } from '../hooks/useAuth';
 import { notifyDataChanged, useContractors, useFindingDetails, usePermits } from '../hooks/useData';
 import { localDate, sameMonth } from '../lib/stats';
 import { riskTone, supabase, type Contractor, type FindingDetail, type Permit, type Severity } from '../lib/supabase';
@@ -20,14 +20,14 @@ const shortDate = (isoDate: string) => localDate(isoDate).toLocaleDateString('th
 const isOverdue = (f: FindingDetail) => !f.resolved && !!f.due_on && f.due_on < today();
 
 export function Findings() {
-  const profile = useProfile();
+  const can = useCan();
   const findings = useFindingDetails();
   const contractors = useContractors();
   const permits = usePermits();
   const [filter, setFilter] = useState<Filter>('open');
   const [adding, setAdding] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const canRecord = profile.role === 'safety' || profile.role === 'area_owner';
+  const canRecord = can('manage_findings');
 
   const now = new Date();
   const open = findings.data.filter((f) => !f.resolved);
@@ -110,7 +110,7 @@ export function Findings() {
         })}
       </Card>
 
-      {selected && <FindingDetailCard key={selected.id} finding={selected} canResolve={canRecord} canDelete={profile.role === 'safety'} onClose={() => setSelectedId(null)} />}
+      {selected && <FindingDetailCard key={selected.id} finding={selected} canResolve={canRecord} canDelete={canRecord} onClose={() => setSelectedId(null)} />}
     </div>
   );
 }

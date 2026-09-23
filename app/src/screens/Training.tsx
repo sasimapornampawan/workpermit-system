@@ -3,7 +3,7 @@ import { CourseEditor } from '../components/CourseEditor';
 import { ExamRunner } from '../components/ExamRunner';
 import { Button, FormMessage } from '../components/form';
 import { Bar, Card, CardTitle, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
-import { useProfile } from '../hooks/useAuth';
+import { useCan } from '../hooks/useAuth';
 import { notifyDataChanged, useBadges, useCourseQuestions, useCourses, useExamResults } from '../hooks/useData';
 import { countBy, localDate } from '../lib/stats';
 import { examResult, supabase, type Course } from '../lib/supabase';
@@ -14,7 +14,7 @@ const COLS = 'minmax(0, 1.3fr) minmax(0, 1.2fr) 100px 72px 96px';
 const rateColor = (rate: number) => (rate >= 90 ? C.grn : rate >= 80 ? C.acc : C.amb);
 
 export function Training() {
-  const profile = useProfile();
+  const can = useCan();
   const courses = useCourses();
   const exams = useExamResults();
   const badges = useBadges();
@@ -36,8 +36,8 @@ export function Training() {
     notifyDataChanged();
   }
 
-  const isSafety = profile.role === 'safety';
-  const canRunExam = isSafety || profile.role === 'contractor';
+  const isSafety = can('manage_courses');
+  const canRunExam = can('run_exams');
   const courseList = courses.data.filter((c) => isSafety || c.active).sort((a, b) => a.code.localeCompare(b.code));
   const selected = courseList.find((c) => c.code === selectedCode && c.active) ?? courseList.find((c) => c.active);
   const examList = [...exams.data].sort((a, b) => b.taken_on.localeCompare(a.taken_on));

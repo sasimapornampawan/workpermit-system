@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { Button, Field, FormMessage, Select, TextInput } from '../components/form';
 import { ImportButton, ImportPanel } from '../components/ExcelImport';
 import { Card, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
-import { useProfile } from '../hooks/useAuth';
+import { useCan } from '../hooks/useAuth';
 import { notifyDataChanged, useBadges, useContractors } from '../hooks/useData';
 import { countBy } from '../lib/stats';
 import { contractorStatus, supabase, type Contractor } from '../lib/supabase';
@@ -11,12 +11,12 @@ import { C, L, MONO } from '../theme';
 const COLS = 'minmax(0, 1.5fr) 130px 84px 118px 118px 110px';
 
 export function Contractors() {
-  const profile = useProfile();
+  const can = useCan();
   const { data, loading, error } = useContractors();
   const badges = useBadges();
   const [editing, setEditing] = useState<Contractor | 'new' | null>(null);
   const [importFile, setImportFile] = useState<File | null>(null);
-  const isSafety = profile.role === 'safety';
+  const isSafety = can('manage_contractors');
   const contractors = [...data].sort((a, b) => a.code.localeCompare(b.code));
   const issuedByCompany = countBy(badges.data.filter((b) => b.status === 'issued'), (b) => b.company);
   const kpis = [
