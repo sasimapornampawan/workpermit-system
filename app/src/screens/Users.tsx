@@ -292,8 +292,36 @@ function UserEditor({ user, isSelf, contractors, onClose }: { user: AdminUser; i
   const [role, setRole] = useState<string>(user.role && user.active ? user.role : '');
   const [contractorId, setContractorId] = useState(user.contractor_id ?? '');
   const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState<'save' | 'password' | null>(null);
+  const [login, setLogin] = useState(() => displayLogin(user.email));
+  const [busy, setBusy] = useState<'save' | 'password' | 'login' | 'delete' | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
+
+  async function updateLogin() {
+    setBusy('login');
+    setMessage(null);
+    const { error } = await callAdminFunction({ action: 'update_email', user_id: user.id, email: toLoginEmail(login) });
+    setBusy(null);
+    if (error) {
+      setMessage({ error: true, text: error });
+      return;
+    }
+    setMessage({ error: false, text: `เปลี่ยนเป็น ${displayLogin(toLoginEmail(login))} แล้ว ผู้ใช้ต้องใช้ชื่อใหม่ในการเข้าระบบครั้งถัดไป` });
+    notifyDataChanged();
+  }
+
+  async function removeUser() {
+    if (!window.confirm(`ลบบัญชี ${displayLogin(user.email)} ถาวร?\nใช้กับบัญชีที่สร้างผิดเท่านั้น ถ้าเคยใช้งานแล้วให้ตั้งบทบาทเป็น "ไม่มีสิทธิ์" แทน`)) return;
+    setBusy('delete');
+    setMessage(null);
+    const { error } = await callAdminFunction({ action: 'delete_user', user_id: user.id });
+    setBusy(null);
+    if (error) {
+      setMessage({ error: true, text: error });
+      return;
+    }
+    notifyDataChanged();
+    onClose();
+  }
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -356,6 +384,17 @@ function UserEditor({ user, isSelf, contractors, onClose }: { user: AdminUser; i
         </div>
       </form>
 
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${L.headBd}`, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, alignItems: 'end' }}>
+        <Field label="เปลี่ยนชื่อผู้ใช้ หรืออีเมล">
+          <TextInput value={login} onChange={(e) => setLogin(e.target.value)} autoCapitalize="none" spellCheck={false} style={{ fontFamily: MONO }} />
+        </Field>
+        <div>
+          <Button variant="outline" disabled={busy !== null || !login.trim() || login.trim() === displayLogin(user.email)} onClick={updateLogin}>
+            {busy === 'login' ? 'กำลังบันทึก...' : 'บันทึกชื่อผู้ใช้'}
+          </Button>
+        </div>
+      </div>
+
       {user.role && user.active && <PermissionsEditor user={user} />}
 
       <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${L.headBd}`, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14, alignItems: 'end' }}>
@@ -366,6 +405,17 @@ function UserEditor({ user, isSelf, contractors, onClose }: { user: AdminUser; i
           </Button>
         </div>
       </div>
+
+      {!isSelf && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${L.headBd}`, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 200, fontSize: 11.5, color: C.mut }}>
+            ลบบัญชีได้เฉพาะบัญชีที่ยังไม่เคยบันทึกอะไรในระบบ ถ้าเคยใช้งานแล้วให้ตั้งบทบาทเป็น "ไม่มีสิทธิ์" เพื่อเก็บประวัติไว้
+          </div>
+          <Button variant="outline" disabled={busy !== null} onClick={removeUser} style={{ color: tone('bad').fg }}>
+            {busy === 'delete' ? 'กำลังลบ...' : 'ลบบัญชีถาวร'}
+          </Button>
+        </div>
+      )}
 
       {message && <FormMessage error={message.error} style={{ marginTop: 12 }}>{message.text}</FormMessage>}
     </Card>

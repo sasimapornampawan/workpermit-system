@@ -74,6 +74,52 @@ Deno.serve(async (req) => {
     return reply(200, { id: created.user.id });
   }
 
+  if (body.action === 'update_email') {
+    const userId = String(body.user_id ?? '');
+    const email = String(body.email ?? '').trim().toLowerCase();
+    if (!userId) return reply(400, { error: 'ไม่พบบัญชีผู้ใช้' });
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return reply(400, { error: 'ชื่อผู้ใช้หรืออีเมลไม่ถูกต้อง' });
+
+    const { error } = await admin.auth.admin.updateUserById(userId, { email, email_confirm: true });
+    if (error) {
+      const taken = error.message.toLowerCase().includes('already');
+      return reply(400, { error: taken ? 'ชื่อผู้ใช้หรืออีเมลนี้มีบัญชีอื่นใช้อยู่แล้ว' : `เปลี่ยนไม่สำเร็จ: ${error.message}` });
+    }
+    return reply(200, { ok: true });
+  }
+
+  if (body.action === 'delete_user') {
+    const userId = String(body.user_id ?? '');
+    if (!userId) return reply(400, { error: 'ไม่พบบัญชีผู้ใช้' });
+    if (userId === auth.user.id) return reply(400, { error: 'ลบบัญชีของตัวเองไม่ได้' });
+
+    // Deleting would orphan history, so refuse while anything still points at this account.
+    const history: [string, string, string][] = [
+      ['permits', 'created_by', 'คำขอ Permit'],
+      ['permit_approvals', 'decided_by', 'การอนุมัติ Permit'],
+      ['permit_events', 'acted_by', 'การเปลี่ยนสถานะงาน'],
+      ['permit_attachments', 'uploaded_by', 'เอกสารแนบ'],
+      ['badges', 'requested_by', 'คำขอบัตร'],
+      ['badges', 'issued_by', 'การออกบัตร'],
+      ['findings', 'reported_by', 'ข้อบกพร่องที่บันทึกไว้'],
+      ['findings', 'resolved_by', 'การปิดข้อบกพร่อง'],
+      ['alerts', 'created_by', 'แจ้งเตือน'],
+      ['alerts', 'closed_by', 'การปิดแจ้งเตือน'],
+      ['exam_attempts', 'started_by', 'การจัดสอบ'],
+      ['user_permissions', 'set_by', 'การตั้งสิทธิ์ให้ผู้ใช้อื่น'],
+    ];
+    for (const [table, column, label] of history) {
+      const { count } = await admin.from(table).select('*', { count: 'exact', head: true }).eq(column, userId);
+      if (count) {
+        return reply(400, { error: `ลบไม่ได้ เพราะมี${label} ${count} รายการที่บันทึกโดยบัญชีนี้ — ให้ตั้งบทบาทเป็น "ไม่มีสิทธิ์" แทน` });
+      }
+    }
+
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error) return reply(400, { error: `ลบบัญชีไม่สำเร็จ: ${error.message}` });
+    return reply(200, { ok: true });
+  }
+
   if (body.action === 'reset_password') {
     const userId = String(body.user_id ?? '');
     const password = String(body.password ?? '');
