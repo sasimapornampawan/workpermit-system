@@ -11,6 +11,7 @@ import { Findings } from './screens/Findings';
 import { AuthMessage, ChangePassword, Login } from './screens/Login';
 import { EMPTY_DRAFT, Permits, type PermitDraft } from './screens/Permits';
 import { Reports } from './screens/Reports';
+import { SafetyCatalog } from './screens/SafetyCatalog';
 import { Training } from './screens/Training';
 import { Users } from './screens/Users';
 import { C, SANS } from './theme';
@@ -21,6 +22,7 @@ type AppProps = { defaultScreen?: Screen; showEnglishLabels?: boolean };
 const SCREEN_PERMISSION: Partial<Record<Screen, PermissionKey>> = {
   permits: 'request_permits',
   reports: 'view_reports',
+  catalog: 'manage_jsa_ppe',
   users: 'manage_users',
 };
 
@@ -92,6 +94,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
             )}
             {current === 'findings' && <Findings />}
             {current === 'reports' && <Reports />}
+            {current === 'catalog' && <SafetyCatalog />}
             {current === 'users' && <Users />}
           </main>
         </div>

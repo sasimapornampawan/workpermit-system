@@ -187,7 +187,12 @@ export type FindingDetail = Finding & {
   resolver: { full_name: string } | null;
 };
 
-export type MonthlyReport = { month: string; safe_hours: number; near_misses: number; on_time_close_pct: number };
+/** permit_type_code null = applies to every permit type. */
+export type JsaHazard = { id: string; permit_type_code: string | null; hazard: string; control: string; level: Severity; sort: number; active: boolean };
+
+export type PpeItem = { id: string; permit_type_code: string | null; label: string; required: boolean; sort: number; active: boolean };
+
+export type MonthlyReport ={ month: string; safe_hours: number; near_misses: number; on_time_close_pct: number };
 
 export type Recommendation = { id: string; title: string; detail: string; priority: string; sort: number };
 

@@ -1,7 +1,8 @@
 /** Mirrors the permissions seeded by SUPABASE_PHASE14_PERMISSIONS.sql, which is what actually enforces them. */
 export type PermissionKey =
   | 'manage_contractors' | 'manage_badges' | 'manage_courses' | 'run_exams' | 'request_permits' | 'approve_permits'
-  | 'manage_permit_status' | 'manage_findings' | 'manage_alerts' | 'manage_reports_data' | 'view_reports' | 'manage_users';
+  | 'manage_permit_status' | 'manage_findings' | 'manage_alerts' | 'manage_reports_data' | 'view_reports' | 'manage_users'
+  | 'manage_jsa_ppe';
 
 export const PERMISSIONS: { key: PermissionKey; label: string; detail: string }[] = [
   { key: 'manage_contractors', label: 'จัดการผู้รับเหมา', detail: 'เพิ่ม แก้ไข และนำเข้าไฟล์ Excel' },
@@ -15,5 +16,6 @@ export const PERMISSIONS: { key: PermissionKey; label: string; detail: string }[
   { key: 'manage_alerts', label: 'จัดการแจ้งเตือน', detail: 'เพิ่มและปิดแจ้งเตือนบนแดชบอร์ด' },
   { key: 'manage_reports_data', label: 'บันทึกข้อมูลรายงาน', detail: 'ตัวเลขรายเดือนและข้อเสนอผู้บริหาร' },
   { key: 'view_reports', label: 'ดูรายงานผู้บริหาร', detail: 'เข้าเมนูรายงานและส่งออก PDF' },
+  { key: 'manage_jsa_ppe', label: 'จัดการ JSA และ PPE', detail: 'แก้ไขรายการอันตราย มาตรการควบคุม และอุปกรณ์ป้องกัน' },
   { key: 'manage_users', label: 'จัดการผู้ใช้', detail: 'สร้างบัญชี กำหนดบทบาทและสิทธิ์' },
 ];

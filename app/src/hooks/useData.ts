@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { PermitAttachment } from '../lib/attachments';
 import {
   supabase, type AdminUser, type Alert, type Badge, type Contractor, type Course, type CourseQuestion, type ExamResult,
-  type Finding, type FindingDetail, type MonthlyReport, type Permit, type PermitApproval, type PermitEvent, type Recommendation,
+  type Finding, type FindingDetail, type JsaHazard, type MonthlyReport, type PpeItem, type Permit, type PermitApproval, type PermitEvent, type Recommendation,
 } from '../lib/supabase';
 
 const listeners = new Set<() => void>();
@@ -70,6 +70,8 @@ export const useFindingDetails = () =>
     'findings',
     '*, contractors(name), permits(permit_no), reporter:profiles!findings_reported_by_fkey(full_name), resolver:profiles!findings_resolved_by_fkey(full_name)',
   );
+export const useJsaHazards = () => useTable<JsaHazard>('jsa_hazards');
+export const usePpeItems = () => useTable<PpeItem>('ppe_items');
 export const useMonthlyReports = () => useTable<MonthlyReport>('monthly_reports');
 export const useRecommendations = () => useTable<Recommendation>('recommendations');
 /** Safety officers only; returns no rows for other roles. */

@@ -1,7 +1,7 @@
 import { BRAND } from './brand';
 import type { Tone } from './theme';
 
-export type Screen = 'dashboard' | 'contractors' | 'badges' | 'training' | 'permits' | 'findings' | 'reports' | 'users';
+export type Screen = 'dashboard' | 'contractors' | 'badges' | 'training' | 'permits' | 'findings' | 'reports' | 'catalog' | 'users';
 
 export const NAV: { id: Screen; label: string; en: string }[] = [
   { id: 'dashboard', label: 'แดชบอร์ด', en: 'Dashboard' },
@@ -11,6 +11,7 @@ export const NAV: { id: Screen; label: string; en: string }[] = [
   { id: 'permits', label: 'ขอ Work Permit', en: 'Permit Request' },
   { id: 'findings', label: 'ข้อบกพร่อง', en: 'Inspection Findings' },
   { id: 'reports', label: 'รายงานผู้บริหาร', en: 'Reports' },
+  { id: 'catalog', label: 'JSA & PPE', en: 'Hazards & PPE' },
   { id: 'users', label: 'จัดการผู้ใช้', en: 'Users' },
 ];
 
@@ -22,6 +23,7 @@ export const SCREEN_META: Record<Screen, [title: string, subtitle: string]> = {
   permits: ['ขอใบอนุญาตทำงาน', 'แบบฟอร์ม 4 ขั้นตอน พร้อมการชี้บ่งอันตรายและลำดับอนุมัติ'],
   findings: ['ข้อบกพร่องจากการตรวจพื้นที่', 'บันทึก ติดตาม และปิดข้อบกพร่องของผู้รับเหมา'],
   reports: ['รายงานสรุปผู้บริหาร', 'สรุปรายเดือน พร้อมแนวโน้มและข้อเสนอเชิงนโยบาย'],
+  catalog: ['JSA และ PPE', 'รายการอันตราย มาตรการควบคุม และอุปกรณ์ป้องกันตามประเภทงาน'],
   users: ['จัดการผู้ใช้', 'บัญชีผู้ใช้ บทบาท และสิทธิ์การเข้าถึงระบบ'],
 };
 
@@ -74,20 +76,4 @@ export const ATTACHMENT_KINDS = [
   'ใบตรวจสอบเครื่องมือและอุปกรณ์',
   'กรมธรรม์ประกันภัยที่ยังไม่หมดอายุ',
   'เอกสารอื่น ๆ',
-];
-
-export const HAZARDS: { hazard: string; control: string; level: string; tone: Tone }[] = [
-  { hazard: 'ประกายไฟติดวัสดุไวไฟ', control: 'เคลื่อนย้ายวัสดุไวไฟออกรัศมี 11 เมตร คลุมผ้ากันไฟ จัดผู้เฝ้าระวังไฟ', level: 'สูง', tone: 'bad' },
-  { hazard: 'ไอระเหยสารไวไฟในพื้นที่', control: 'ตรวจวัดก๊าซก่อนเริ่มงานและทุก 2 ชั่วโมง ต้องต่ำกว่า 10% LEL', level: 'สูง', tone: 'bad' },
-  { hazard: 'ควันเชื่อมและฟูมโลหะ', control: 'ติดตั้งพัดลมดูดอากาศเฉพาะจุด สวมหน้ากากกรองฟูม', level: 'ปานกลาง', tone: 'warn' },
-  { hazard: 'พลังงานความร้อนและไอน้ำค้างในระบบ', control: 'ตัดแยกพลังงาน ระบายแรงดัน ล็อกและแขวนป้าย (LOTO)', level: 'สูง', tone: 'bad' },
-  { hazard: 'ตกจากบันไดและนั่งร้าน', control: 'ใช้นั่งร้านที่ผ่านการตรวจ ติดป้ายสีเขียว และสวมเข็มขัดนิรภัยแบบเต็มตัว', level: 'ปานกลาง', tone: 'warn' },
-];
-
-export const PPE = [
-  { label: 'หมวกนิรภัย', required: true }, { label: 'แว่นตานิรภัย', required: true },
-  { label: 'หน้ากากเชื่อม', required: true }, { label: 'ถุงมือหนัง', required: true },
-  { label: 'ชุดกันประกายไฟ', required: true }, { label: 'รองเท้านิรภัย', required: true },
-  { label: 'หน้ากากกรองฟูม', required: true }, { label: 'เข็มขัดนิรภัยเต็มตัว', required: true },
-  { label: 'ที่อุดหูลดเสียง', required: false }, { label: 'ชุดป้องกันสารเคมี', required: false },
 ];

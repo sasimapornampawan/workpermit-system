@@ -2,10 +2,10 @@ import { useState, type ChangeEvent } from 'react';
 import { Button, Field, FormMessage, Select, TextArea, TextInput } from '../components/form';
 import { AttachmentPicker, type DraftFile } from '../components/Attachments';
 import { Card, DataState, Pill, TableHead, TableRow, ellipsis } from '../components/ui';
-import { HAZARDS, PERMIT_TYPES, PPE, STEPS } from '../data';
+import { PERMIT_TYPES, STEPS } from '../data';
 import { uploadPermitFile } from '../lib/attachments';
 import { useProfile } from '../hooks/useAuth';
-import { notifyDataChanged, useBadges, useContractors } from '../hooks/useData';
+import { notifyDataChanged, useBadges, useContractors, useJsaHazards, usePpeItems } from '../hooks/useData';
 import { ROLE_LABEL, asTone, badgeStatus, riskTone, supabase, type Badge, type Contractor, type Profile } from '../lib/supabase';
 import { C, L, MONO, tone, type Tone } from '../theme';
 
@@ -124,7 +124,7 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
           lockedName={isContractor ? contractor?.name ?? '' : null}
         />
       )}
-      {step === 3 && <StepRisk />}
+      {step === 3 && <StepRisk typeCode={type.code} />}
       {step === 4 && (
         <StepApproval
           typeName={type.name}
@@ -218,39 +218,50 @@ function StepDetails({ draft, onDraft, contractors, contractorId, lockedName }: 
 
 const JSA_COLS = 'minmax(0, 1fr) minmax(0, 1.2fr) 78px';
 
-function StepRisk() {
+function StepRisk({ typeCode }: { typeCode: string }) {
+  const hazards = useJsaHazards();
+  const ppe = usePpeItems();
+  const applies = (code: string | null) => code === null || code === typeCode;
+  const hazardList = hazards.data.filter((h) => h.active && applies(h.permit_type_code)).sort((a, b) => a.sort - b.sort);
+  const ppeList = ppe.data.filter((p) => p.active && applies(p.permit_type_code)).sort((a, b) => Number(b.required) - Number(a.required) || a.sort - b.sort);
+  const highCount = hazardList.filter((h) => h.level === 'สูง').length;
+
   return (
     <div style={twoCol}>
       <Card style={{ padding: 18 }}>
         <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>การชี้บ่งอันตรายและมาตรการควบคุม (JSA)</div>
-        <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)', marginBottom: 14 }}>ระบบเสนอรายการตามประเภทงานที่เลือก</div>
+        <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)', marginBottom: 14 }}>รายการตามประเภทงานที่เลือก กำหนดโดยเจ้าหน้าที่ความปลอดภัย</div>
         <div style={{ display: 'grid', gridTemplateColumns: JSA_COLS, gap: 12, padding: '8px 0', borderBottom: `1px solid ${L.headBd}`, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.06em', whiteSpace: 'nowrap', color: 'oklch(0.5 0.02 265)' }}>
           <div>อันตราย</div><div>มาตรการควบคุม</div><div>ระดับ</div>
         </div>
-        {HAZARDS.map((h) => (
-          <div key={h.hazard} style={{ display: 'grid', gridTemplateColumns: JSA_COLS, gap: 12, padding: '11px 0', borderBottom: '1px solid oklch(0.96 0.008 265)', alignItems: 'center' }}>
+        <DataState loading={hazards.loading} error={hazards.error} count={hazardList.length} empty="ยังไม่มีรายการอันตรายสำหรับประเภทงานนี้" style={{ padding: '12px 0' }} />
+        {hazardList.map((h) => (
+          <div key={h.id} style={{ display: 'grid', gridTemplateColumns: JSA_COLS, gap: 12, padding: '11px 0', borderBottom: '1px solid oklch(0.96 0.008 265)', alignItems: 'center' }}>
             <div style={{ fontSize: 12.5, fontWeight: 500 }}>{h.hazard}</div>
             <div style={{ fontSize: 12, color: 'oklch(0.45 0.02 265)', lineHeight: 1.5 }}>{h.control}</div>
-            <div><Pill t={h.tone}>{h.level}</Pill></div>
+            <div><Pill t={riskTone(h.level)}>{h.level}</Pill></div>
           </div>
         ))}
+        {hazardList.length > 0 && (
+          <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 8, background: 'oklch(0.97 0.02 265)', border: '1px solid oklch(0.91 0.03 265)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 500 }}>ต้องควบคุมทั้งหมด {hazardList.length} รายการ</div>
+            <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, color: tone(highCount ? 'bad' : 'ok').fg }}>ความเสี่ยงสูง {highCount} รายการ</div>
+          </div>
+        )}
       </Card>
 
       <Card style={{ padding: 18 }}>
         <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>อุปกรณ์คุ้มครองความปลอดภัยส่วนบุคคล</div>
+        <DataState loading={ppe.loading} error={ppe.error} count={ppeList.length} empty="ยังไม่มีรายการอุปกรณ์สำหรับประเภทงานนี้" style={{ padding: 0 }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-          {PPE.map((p) => (
-            <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 7, border: `1px solid ${p.required ? C.accBd : L.idle}`, background: p.required ? C.accBg : '#fff' }}>
+          {ppeList.map((p) => (
+            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 7, border: `1px solid ${p.required ? C.accBd : L.idle}`, background: p.required ? C.accBg : '#fff' }}>
               <div style={{ width: 15, height: 15, flex: '0 0 15px', borderRadius: 4, background: p.required ? C.acc : '#fff', border: `1px solid ${p.required ? C.acc : 'oklch(0.85 0.01 265)'}`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 700 }}>
                 {p.required ? '✓' : ''}
               </div>
               <div style={{ fontSize: 12 }}>{p.label}</div>
             </div>
           ))}
-        </div>
-        <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 8, background: 'oklch(0.97 0.03 70)', border: '1px solid oklch(0.9 0.06 70)' }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'oklch(0.42 0.1 70)', marginBottom: 4 }}>ต้องมีผู้เฝ้าระวังไฟ (Fire Watch)</div>
-          <div style={{ fontSize: 11.5, color: 'oklch(0.45 0.04 70)', lineHeight: 1.5 }}>งานตัด-เชื่อมต้องมีผู้เฝ้าระวังตลอดการทำงาน และเฝ้าต่อเนื่องอีก 30 นาทีหลังเลิกงาน</div>
         </div>
       </Card>
     </div>
