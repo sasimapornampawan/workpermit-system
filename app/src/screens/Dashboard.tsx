@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, FormMessage } from '../components/form';
+import { Button, FormMessage, TextArea } from '../components/form';
 import { AlertsCard } from '../components/AlertsCard';
 import { PermitDetail } from '../components/PermitDetail';
 import { Bar, Card, CardTitle, DataState, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
@@ -159,18 +159,36 @@ const QUEUE_COLS = '118px minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr) 84px 
 function ApprovalQueue({ permits, loading, error, role }: { permits: Permit[]; loading: boolean; error: string | null; role: Role }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
+  const [pending, setPending] = useState<{ permit: Permit; decision: 'approved' | 'rejected' } | null>(null);
+  const [note, setNote] = useState('');
 
-  async function decide(permit: Permit, decision: 'approved' | 'rejected') {
-    if (!supabase) return;
-    if (decision === 'rejected' && !window.confirm(`ยืนยันไม่อนุมัติ ${permit.permit_no}?`)) return;
+  function start(permit: Permit, decision: 'approved' | 'rejected') {
+    setPending({ permit, decision });
+    setNote('');
+    setMessage(null);
+  }
+
+  async function confirm() {
+    if (!supabase || !pending) return;
+    const { permit, decision } = pending;
+    if (decision === 'rejected' && !note.trim()) {
+      setMessage({ error: true, text: 'กรุณาระบุเหตุผลที่ไม่อนุมัติ' });
+      return;
+    }
     setBusyId(permit.id);
     setMessage(null);
-    const { error: err } = await supabase.rpc('decide_permit', { p_permit_id: permit.id, p_decision: decision });
+    const { error: err } = await supabase.rpc('decide_permit', {
+      p_permit_id: permit.id,
+      p_decision: decision,
+      p_note: note.trim() || null,
+    });
     setBusyId(null);
     if (err) {
       setMessage({ error: true, text: `ดำเนินการไม่สำเร็จ: ${err.message}` });
       return;
     }
+    setPending(null);
+    setNote('');
     setMessage({ error: false, text: `${decision === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ'} ${permit.permit_no} แล้ว` });
     notifyDataChanged();
   }
@@ -190,11 +208,33 @@ function ApprovalQueue({ permits, loading, error, role }: { permits: Permit[]; l
           <div style={{ fontSize: 12.5, color: 'oklch(0.5 0.02 265)', ...ellipsis }}>{p.area}</div>
           <div><Pill t={riskTone(p.risk)}>{p.risk}</Pill></div>
           <div style={{ display: 'flex', gap: 6 }}>
-            <Button variant="outline" disabled={busyId !== null} onClick={() => decide(p, 'rejected')}>ไม่อนุมัติ</Button>
-            <Button disabled={busyId !== null} onClick={() => decide(p, 'approved')}>{busyId === p.id ? 'กำลังบันทึก...' : 'อนุมัติ'}</Button>
+            <Button variant="outline" disabled={busyId !== null} onClick={() => start(p, 'rejected')}>ไม่อนุมัติ</Button>
+            <Button disabled={busyId !== null} onClick={() => start(p, 'approved')}>อนุมัติ</Button>
           </div>
         </TableRow>
       ))}
+
+      {pending && (
+        <div style={{ padding: '14px 18px', borderTop: `1px solid ${L.headBd}`, background: tone(pending.decision === 'approved' ? 'ok' : 'bad').bg }}>
+          <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 8 }}>
+            {pending.decision === 'approved' ? 'อนุมัติ' : 'ไม่อนุมัติ'} {pending.permit.permit_no} — {pending.permit.type}
+          </div>
+          <TextArea
+            rows={2}
+            autoFocus
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={pending.decision === 'approved' ? 'หมายเหตุ (ไม่บังคับ) เช่น เงื่อนไขที่ต้องทำก่อนเริ่มงาน' : 'ระบุเหตุผลที่ไม่อนุมัติ เพื่อให้ผู้รับเหมาแก้ไขและยื่นใหม่'}
+          />
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 }}>
+            <Button variant="outline" disabled={busyId !== null} onClick={() => setPending(null)}>ยกเลิก</Button>
+            <Button disabled={busyId !== null} onClick={confirm}>
+              {busyId ? 'กำลังบันทึก...' : pending.decision === 'approved' ? 'ยืนยันอนุมัติ' : 'ยืนยันไม่อนุมัติ'}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {message && <FormMessage error={message.error} style={{ padding: '12px 18px' }}>{message.text}</FormMessage>}
     </Card>
   );
