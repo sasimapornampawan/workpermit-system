@@ -10,9 +10,14 @@ import { ROLE_LABEL, asTone, badgeStatus, riskTone, supabase, type Badge, type C
 import { C, L, MONO, tone, type Tone } from '../theme';
 
 export type PermitDraft = {
-  title: string; contractorId: string; area: string; detail: string; startAt: string; endAt: string; workers: string; files: DraftFile[];
+  title: string; contractorId: string; area: string; detail: string; startAt: string; endAt: string; workers: string;
+  files: DraftFile[];
+  /** PPE chosen on top of the ones marked required for the work type. */
+  extraPpe: string[];
 };
-export const EMPTY_DRAFT: PermitDraft = { title: '', contractorId: '', area: '', detail: '', startAt: '', endAt: '', workers: '', files: [] };
+export const EMPTY_DRAFT: PermitDraft = {
+  title: '', contractorId: '', area: '', detail: '', startAt: '', endAt: '', workers: '', files: [], extraPpe: [],
+};
 
 type Props = {
   step: number; onStep: (n: number) => void;
@@ -37,6 +42,10 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
   const contractorId = isContractor ? profile.contractor_id ?? '' : draft.contractorId;
   const contractor = contractors.data.find((c) => c.id === contractorId);
   const crew = contractor ? badges.data.filter((b) => b.company === contractor.name) : [];
+  const ppe = usePpeItems();
+  const requiredPpe = ppe.data
+    .filter((p) => p.active && p.required && (p.permit_type_code === null || p.permit_type_code === type.code))
+    .map((p) => p.label);
 
   async function submit() {
     const missing = [
@@ -70,6 +79,7 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
         start_at: new Date(draft.startAt).toISOString(),
         end_at: new Date(draft.endAt).toISOString(),
         workers: draft.workers ? Number(draft.workers) : null,
+        ppe: [...new Set([...requiredPpe, ...draft.extraPpe])],
       })
       .select('id, permit_no')
       .single();
@@ -124,7 +134,9 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
           lockedName={isContractor ? contractor?.name ?? '' : null}
         />
       )}
-      {step === 3 && <StepRisk typeCode={type.code} />}
+      {step === 3 && (
+        <StepRisk typeCode={type.code} extraPpe={draft.extraPpe} onExtraPpe={(extraPpe) => onDraft({ ...draft, extraPpe })} />
+      )}
       {step === 4 && (
         <StepApproval
           typeName={type.name}
@@ -218,13 +230,29 @@ function StepDetails({ draft, onDraft, contractors, contractorId, lockedName }: 
 
 const JSA_COLS = 'minmax(0, 1fr) minmax(0, 1.2fr) 78px';
 
-function StepRisk({ typeCode }: { typeCode: string }) {
+function StepRisk({ typeCode, extraPpe, onExtraPpe }: { typeCode: string; extraPpe: string[]; onExtraPpe: (labels: string[]) => void }) {
   const hazards = useJsaHazards();
   const ppe = usePpeItems();
+  const [custom, setCustom] = useState('');
   const applies = (code: string | null) => code === null || code === typeCode;
   const hazardList = hazards.data.filter((h) => h.active && applies(h.permit_type_code)).sort((a, b) => a.sort - b.sort);
   const ppeList = ppe.data.filter((p) => p.active && applies(p.permit_type_code)).sort((a, b) => Number(b.required) - Number(a.required) || a.sort - b.sort);
   const highCount = hazardList.filter((h) => h.level === 'สูง').length;
+  const catalogueLabels = new Set(ppeList.map((p) => p.label));
+  const customPpe = extraPpe.filter((label) => !catalogueLabels.has(label));
+
+  const toggle = (label: string) =>
+    onExtraPpe(extraPpe.includes(label) ? extraPpe.filter((l) => l !== label) : [...extraPpe, label]);
+
+  function addCustom() {
+    const label = custom.trim();
+    if (!label || extraPpe.includes(label) || catalogueLabels.has(label)) {
+      setCustom('');
+      return;
+    }
+    onExtraPpe([...extraPpe, label]);
+    setCustom('');
+  }
 
   return (
     <div style={twoCol}>
@@ -251,17 +279,47 @@ function StepRisk({ typeCode }: { typeCode: string }) {
       </Card>
 
       <Card style={{ padding: 18 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>อุปกรณ์คุ้มครองความปลอดภัยส่วนบุคคล</div>
+        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>อุปกรณ์คุ้มครองความปลอดภัยส่วนบุคคล</div>
+        <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)', marginBottom: 12 }}>
+          รายการที่บังคับจะติ๊กไว้และปลดไม่ได้ รายการอื่นเลือกเพิ่มตามลักษณะงานได้
+        </div>
         <DataState loading={ppe.loading} error={ppe.error} count={ppeList.length} empty="ยังไม่มีรายการอุปกรณ์สำหรับประเภทงานนี้" style={{ padding: 0 }} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-          {ppeList.map((p) => (
-            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 7, border: `1px solid ${p.required ? C.accBd : L.idle}`, background: p.required ? C.accBg : '#fff' }}>
-              <div style={{ width: 15, height: 15, flex: '0 0 15px', borderRadius: 4, background: p.required ? C.acc : '#fff', border: `1px solid ${p.required ? C.acc : 'oklch(0.85 0.01 265)'}`, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 700 }}>
-                {p.required ? '✓' : ''}
-              </div>
-              <div style={{ fontSize: 12 }}>{p.label}</div>
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 8 }}>
+          {ppeList.map((p) => {
+            const checked = p.required || extraPpe.includes(p.label);
+            return (
+              <label
+                key={p.id}
+                className={p.required ? undefined : 'h-option'}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 7, cursor: p.required ? 'default' : 'pointer', border: `1px solid ${checked ? C.accBd : L.idle}`, background: checked ? C.accBg : '#fff' }}
+              >
+                <input type="checkbox" checked={checked} disabled={p.required} onChange={() => toggle(p.label)} />
+                <span style={{ fontSize: 12, flex: 1 }}>{p.label}</span>
+                {p.required && <span style={{ fontSize: 10, color: C.accFg, whiteSpace: 'nowrap' }}>บังคับ</span>}
+              </label>
+            );
+          })}
+          {customPpe.map((label) => (
+            <label key={label} className="h-option" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 7, cursor: 'pointer', border: `1px solid ${C.accBd}`, background: C.accBg }}>
+              <input type="checkbox" checked onChange={() => toggle(label)} />
+              <span style={{ fontSize: 12, flex: 1 }}>{label}</span>
+              <span style={{ fontSize: 10, color: C.mut, whiteSpace: 'nowrap' }}>เพิ่มเอง</span>
+            </label>
           ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <TextInput
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addCustom();
+              }
+            }}
+            placeholder="เพิ่มอุปกรณ์อื่นสำหรับงานนี้"
+          />
+          <Button variant="outline" disabled={!custom.trim()} onClick={addCustom}>เพิ่ม</Button>
         </div>
       </Card>
     </div>

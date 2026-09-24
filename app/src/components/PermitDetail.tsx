@@ -109,6 +109,16 @@ export function PermitDetail({ permit, onClose }: { permit: Permit; onClose: () 
             {permit.detail && (
               <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'oklch(0.985 0.004 265)', border: `1px solid ${L.headBd}`, fontSize: 12.5, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{permit.detail}</div>
             )}
+            {permit.ppe && permit.ppe.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 11.5, color: 'oklch(0.52 0.02 265)', marginBottom: 6 }}>อุปกรณ์ป้องกันที่กำหนดไว้</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {permit.ppe.map((item) => (
+                    <div key={item} style={{ fontSize: 11.5, padding: '3px 8px', borderRadius: 4, background: 'oklch(0.955 0.02 265)', border: '1px solid oklch(0.9 0.02 265)' }}>{item}</div>
+                  ))}
+                </div>
+              </div>
+            )}
             {permit.permit_next_step && (
               <div style={{ marginTop: 12, fontSize: 12.5, color: tone('warn').fg }}>รอ{ROLE_LABEL[permit.permit_next_step]}พิจารณา</div>
             )}

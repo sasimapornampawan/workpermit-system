@@ -92,6 +92,8 @@ export type Permit = {
   start_at: string | null;
   end_at: string | null;
   workers: number | null;
+  /** Labels chosen in step 3; needs SUPABASE_PHASE17_PERMIT_PPE.sql. */
+  ppe?: string[];
   created_at: string;
   permit_next_step: Role | null;
   contractors: { name: string } | null;
