@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { notifyDataChanged } from '../hooks/useData';
-import { supabase, type Course, type CourseQuestion } from '../lib/supabase';
+import { supabase, type Course, type CourseQuestion, type QuestionStage } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 import { Button, Field, FormMessage, TextArea, TextInput } from './form';
 import { Card } from './ui';
@@ -8,10 +8,18 @@ import { youTubeId } from './YouTubePlayer';
 
 const OPTION_COUNT = 4;
 const OPTION_KEYS = ['ก', 'ข', 'ค', 'ง'];
+const STAGES: QuestionStage[] = ['pre', 'post'];
 
 type QuestionDraft = { id?: string; question: string; options: string[]; correct_index: number };
 
 const emptyQuestion = (): QuestionDraft => ({ question: '', options: Array(OPTION_COUNT).fill(''), correct_index: 0 });
+const filledOf = (list: QuestionDraft[]) => list.filter((d) => d.question.trim() || d.options.some((o) => o.trim()));
+const bySort = (a: CourseQuestion, b: CourseQuestion) => a.sort - b.sort;
+
+const toDrafts = (list: CourseQuestion[]): QuestionDraft[] =>
+  list.length
+    ? list.map((q) => ({ id: q.id, question: q.question, options: [...q.options, ...Array(OPTION_COUNT).fill('')].slice(0, OPTION_COUNT), correct_index: q.correct_index }))
+    : [emptyQuestion()];
 
 export function CourseEditor({ course, questions, taken, onClose }: {
   course: Course | null; questions: CourseQuestion[]; taken: number; onClose: () => void;
@@ -26,16 +34,15 @@ export function CourseEditor({ course, questions, taken, onClose }: {
     required: course?.required ?? false,
     active: course?.active ?? true,
   });
-  const original = course ? questions.filter((q) => q.course_code === course.code).sort((a, b) => a.sort - b.sort) : [];
-  const [drafts, setDrafts] = useState<QuestionDraft[]>(() =>
-    original.length
-      ? original.map((q) => ({ id: q.id, question: q.question, options: [...q.options, ...Array(OPTION_COUNT).fill('')].slice(0, OPTION_COUNT), correct_index: q.correct_index }))
-      : [emptyQuestion()],
-  );
+  const originals: Record<QuestionStage, CourseQuestion[]> = {
+    pre: course ? questions.filter((q) => q.course_code === course.code && q.stage === 'pre').sort(bySort) : [],
+    post: course ? questions.filter((q) => q.course_code === course.code && q.stage === 'post').sort(bySort) : [],
+  };
+  const [drafts, setDrafts] = useState<Record<QuestionStage, QuestionDraft[]>>(() => ({ pre: toDrafts(originals.pre), post: toDrafts(originals.post) }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const setDraft = (i: number, next: Partial<QuestionDraft>) => setDrafts(drafts.map((d, j) => (j === i ? { ...d, ...next } : d)));
+  const setBank = (stage: QuestionStage, next: QuestionDraft[]) => setDrafts((prev) => ({ ...prev, [stage]: next }));
 
   async function remove() {
     if (!supabase || !course) return;
@@ -64,11 +71,13 @@ export function CourseEditor({ course, questions, taken, onClose }: {
       setError('ลิงก์วิดีโอต้องเป็นลิงก์ YouTube เช่น https://youtu.be/xxxxxxxxxxx');
       return;
     }
-    const filled = drafts.filter((d) => d.question.trim() || d.options.some((o) => o.trim()));
-    const incomplete = filled.findIndex((d) => !d.question.trim() || d.options.some((o) => !o.trim()));
-    if (incomplete >= 0) {
-      setError(`ข้อสอบข้อที่ ${incomplete + 1} ยังกรอกคำถามหรือตัวเลือกไม่ครบ`);
-      return;
+    const filled: Record<QuestionStage, QuestionDraft[]> = { pre: filledOf(drafts.pre), post: filledOf(drafts.post) };
+    for (const stage of STAGES) {
+      const incomplete = filled[stage].findIndex((d) => !d.question.trim() || d.options.some((o) => !o.trim()));
+      if (incomplete >= 0) {
+        setError(`${stage === 'pre' ? 'ข้อสอบก่อนอบรม' : 'ข้อสอบหลังอบรม'} ข้อที่ ${incomplete + 1} ยังกรอกคำถามหรือตัวเลือกไม่ครบ`);
+        return;
+      }
     }
 
     const code = (course?.code ?? form.code).trim().toUpperCase();
@@ -95,29 +104,32 @@ export function CourseEditor({ course, questions, taken, onClose }: {
     if (courseErr) return fail(courseErr.code === '23505' ? 'รหัสหลักสูตรนี้มีอยู่แล้ว' : `บันทึกหลักสูตรไม่สำเร็จ: ${courseErr.message}`);
     if (!saved?.length) return fail('ไม่มีสิทธิ์บันทึกหลักสูตร');
 
-    const keptIds = new Set(filled.map((d) => d.id).filter(Boolean));
-    const removed = original.filter((q) => !keptIds.has(q.id)).map((q) => q.id);
-    if (removed.length) {
-      const { error: delErr } = await supabase.from('course_questions').delete().in('id', removed);
-      if (delErr) return fail(`ลบข้อสอบไม่สำเร็จ: ${delErr.message}`);
-    }
+    for (const stage of STAGES) {
+      const keptIds = new Set(filled[stage].map((d) => d.id).filter(Boolean));
+      const removed = originals[stage].filter((q) => !keptIds.has(q.id)).map((q) => q.id);
+      if (removed.length) {
+        const { error: delErr } = await supabase.from('course_questions').delete().in('id', removed);
+        if (delErr) return fail(`ลบข้อสอบไม่สำเร็จ: ${delErr.message}`);
+      }
 
-    const rows = filled.map((d, i) => ({
-      id: d.id,
-      course_code: code,
-      question: d.question.trim(),
-      options: d.options.map((o) => o.trim()),
-      correct_index: d.correct_index,
-      sort: i,
-    }));
-    for (const { id, ...row } of rows.filter((r) => r.id)) {
-      const { error: updErr } = await supabase.from('course_questions').update(row).eq('id', id!);
-      if (updErr) return fail(`บันทึกข้อสอบไม่สำเร็จ: ${updErr.message}`);
-    }
-    const inserts = rows.filter((r) => !r.id).map(({ id: _id, ...row }) => row);
-    if (inserts.length) {
-      const { error: insErr } = await supabase.from('course_questions').insert(inserts);
-      if (insErr) return fail(`บันทึกข้อสอบไม่สำเร็จ: ${insErr.message}`);
+      const rows = filled[stage].map((d, i) => ({
+        id: d.id,
+        course_code: code,
+        stage,
+        question: d.question.trim(),
+        options: d.options.map((o) => o.trim()),
+        correct_index: d.correct_index,
+        sort: i,
+      }));
+      for (const { id, ...row } of rows.filter((r) => r.id)) {
+        const { error: updErr } = await supabase.from('course_questions').update(row).eq('id', id!);
+        if (updErr) return fail(`บันทึกข้อสอบไม่สำเร็จ: ${updErr.message}`);
+      }
+      const inserts = rows.filter((r) => !r.id).map(({ id: _id, ...row }) => row);
+      if (inserts.length) {
+        const { error: insErr } = await supabase.from('course_questions').insert(inserts);
+        if (insErr) return fail(`บันทึกข้อสอบไม่สำเร็จ: ${insErr.message}`);
+      }
     }
 
     setSaving(false);
@@ -141,7 +153,7 @@ export function CourseEditor({ course, questions, taken, onClose }: {
           <Field label="เกณฑ์ผ่าน (%)">
             <TextInput required type="number" min={1} max={100} value={form.pass_score} onChange={(e) => setForm({ ...form, pass_score: e.target.value })} />
           </Field>
-          <Field label="จำนวนข้อที่สุ่มออกสอบ">
+          <Field label="จำนวนข้อที่สุ่มออกสอบหลังอบรม">
             <TextInput required type="number" min={1} max={100} value={form.question_count} onChange={(e) => setForm({ ...form, question_count: e.target.value })} />
           </Field>
         </div>
@@ -156,47 +168,18 @@ export function CourseEditor({ course, questions, taken, onClose }: {
           </label>
         </div>
 
-        <div style={{ marginTop: 20, paddingTop: 14, borderTop: `1px solid ${L.headBd}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>คลังข้อสอบ ({drafts.length} ข้อ)</div>
-              <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)' }}>ระบบจะสุ่มออกสอบ {form.question_count || '—'} ข้อจากคลังนี้ เลือกวงกลมหน้าคำตอบที่ถูก</div>
-            </div>
-            <Button variant="outline" onClick={() => setDrafts([...drafts, emptyQuestion()])}>+ เพิ่มข้อสอบ</Button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {drafts.map((d, i) => (
-              <div key={d.id ?? `new-${i}`} style={{ padding: 12, borderRadius: 8, border: `1px solid ${L.idle}`, background: 'oklch(0.99 0.003 265)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600, color: C.accFg }}>ข้อ {i + 1}</div>
-                  <div style={{ flex: 1 }} />
-                  <Button variant="outline" onClick={() => setDrafts(drafts.filter((_, j) => j !== i))} style={{ padding: '4px 10px', fontSize: 11.5 }}>ลบ</Button>
-                </div>
-                <TextArea rows={2} value={d.question} onChange={(e) => setDraft(i, { question: e.target.value })} placeholder="คำถาม" aria-label={`คำถามข้อ ${i + 1}`} />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8, marginTop: 8 }}>
-                  {d.options.map((option, k) => (
-                    <label key={k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <input
-                        type="radio"
-                        name={`correct-${i}`}
-                        checked={d.correct_index === k}
-                        onChange={() => setDraft(i, { correct_index: k })}
-                        aria-label={`ตัวเลือก ${OPTION_KEYS[k]} เป็นคำตอบที่ถูก`}
-                      />
-                      <span style={{ fontFamily: MONO, fontSize: 11.5, width: 14 }}>{OPTION_KEYS[k]}</span>
-                      <TextInput
-                        value={option}
-                        onChange={(e) => setDraft(i, { options: d.options.map((o, m) => (m === k ? e.target.value : o)) })}
-                        placeholder={`ตัวเลือก ${OPTION_KEYS[k]}`}
-                        style={{ borderColor: d.correct_index === k ? C.grn : undefined }}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <QuestionBank
+          title="ข้อสอบก่อนอบรม (พรีเทส)"
+          hint="ทำทั้งหมดก่อนดูวิดีโอ ใช้วัดความรู้เดิม ไม่นับผลผ่าน/ไม่ผ่าน ไม่ต้องใส่ก็ได้"
+          drafts={drafts.pre}
+          onChange={(next) => setBank('pre', next)}
+        />
+        <QuestionBank
+          title="ข้อสอบหลังอบรม (โพสต์เทส)"
+          hint={`ระบบจะสุ่มออกสอบ ${form.question_count || '—'} ข้อจากคลังนี้ หลังดูวิดีโอ และนับผลผ่าน/ไม่ผ่าน`}
+          drafts={drafts.post}
+          onChange={(next) => setBank('post', next)}
+        />
 
         {error && <FormMessage error style={{ marginTop: 12 }}>{error}</FormMessage>}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', marginTop: 16, flexWrap: 'wrap' }}>
@@ -214,5 +197,55 @@ export function CourseEditor({ course, questions, taken, onClose }: {
         </div>
       </form>
     </Card>
+  );
+}
+
+function QuestionBank({ title, hint, drafts, onChange }: {
+  title: string; hint: string; drafts: QuestionDraft[]; onChange: (next: QuestionDraft[]) => void;
+}) {
+  const setDraft = (i: number, next: Partial<QuestionDraft>) => onChange(drafts.map((d, j) => (j === i ? { ...d, ...next } : d)));
+
+  return (
+    <div style={{ marginTop: 20, paddingTop: 14, borderTop: `1px solid ${L.headBd}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{title} ({drafts.length} ข้อ)</div>
+          <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)' }}>{hint}</div>
+        </div>
+        <Button variant="outline" onClick={() => onChange([...drafts, emptyQuestion()])}>+ เพิ่มข้อสอบ</Button>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {drafts.map((d, i) => (
+          <div key={d.id ?? `new-${i}`} style={{ padding: 12, borderRadius: 8, border: `1px solid ${L.idle}`, background: 'oklch(0.99 0.003 265)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <div style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600, color: C.accFg }}>ข้อ {i + 1}</div>
+              <div style={{ flex: 1 }} />
+              <Button variant="outline" onClick={() => onChange(drafts.filter((_, j) => j !== i))} style={{ padding: '4px 10px', fontSize: 11.5 }}>ลบ</Button>
+            </div>
+            <TextArea rows={2} value={d.question} onChange={(e) => setDraft(i, { question: e.target.value })} placeholder="คำถาม" aria-label={`คำถามข้อ ${i + 1}`} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8, marginTop: 8 }}>
+              {d.options.map((option, k) => (
+                <label key={k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="radio"
+                    name={`correct-${title}-${i}`}
+                    checked={d.correct_index === k}
+                    onChange={() => setDraft(i, { correct_index: k })}
+                    aria-label={`ตัวเลือก ${OPTION_KEYS[k]} เป็นคำตอบที่ถูก`}
+                  />
+                  <span style={{ fontFamily: MONO, fontSize: 11.5, width: 14 }}>{OPTION_KEYS[k]}</span>
+                  <TextInput
+                    value={option}
+                    onChange={(e) => setDraft(i, { options: d.options.map((o, m) => (m === k ? e.target.value : o)) })}
+                    placeholder={`ตัวเลือก ${OPTION_KEYS[k]}`}
+                    style={{ borderColor: d.correct_index === k ? C.grn : undefined }}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

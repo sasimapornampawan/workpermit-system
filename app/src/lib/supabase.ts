@@ -156,7 +156,10 @@ export type Course = {
   active: boolean;
 };
 
-export type CourseQuestion = { id: string; course_code: string; question: string; options: string[]; correct_index: number; sort: number };
+/** 'pre' = ข้อสอบก่อนอบรม (พรีเทส), 'post' = ข้อสอบหลังอบรม. Needs SUPABASE_PHASE22_PRETEST.sql. */
+export type QuestionStage = 'pre' | 'post';
+
+export type CourseQuestion = { id: string; course_code: string; question: string; options: string[]; correct_index: number; sort: number; stage: QuestionStage };
 
 export type ExamResult = {
   id: string;

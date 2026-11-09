@@ -43,7 +43,8 @@ export function Training() {
   const examList = [...exams.data].sort((a, b) => b.taken_on.localeCompare(a.taken_on));
   const takenByCourse = countBy(exams.data, (e) => e.course_code);
   const passedByCourse = countBy(exams.data.filter((e) => e.result === 'pass'), (e) => e.course_code);
-  const questionsByCourse = countBy(questions.data, (q) => q.course_code);
+  const postByCourse = countBy(questions.data.filter((q) => q.stage === 'post'), (q) => q.course_code);
+  const preByCourse = countBy(questions.data.filter((q) => q.stage === 'pre'), (q) => q.course_code);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -88,7 +89,8 @@ export function Training() {
                   {c.required && <Pill t="info" style={{ fontSize: 10.5 }}>บังคับทุกคน</Pill>}
                   {!c.active && <Pill t="flat" style={{ fontSize: 10.5 }}>ปิดใช้งาน</Pill>}
                   {!c.video_url && <Pill t="warn" style={{ fontSize: 10.5 }}>ยังไม่มีวิดีโอ</Pill>}
-                  {isSafety && <Pill t={questionsByCourse.get(c.code) ? 'flat' : 'bad'} style={{ fontSize: 10.5 }}>ข้อสอบ {questionsByCourse.get(c.code) ?? 0} ข้อ</Pill>}
+                  {isSafety && <Pill t={postByCourse.get(c.code) ? 'flat' : 'bad'} style={{ fontSize: 10.5 }}>หลังอบรม {postByCourse.get(c.code) ?? 0} ข้อ</Pill>}
+                  {isSafety && <Pill t="flat" style={{ fontSize: 10.5 }}>ก่อนอบรม {preByCourse.get(c.code) ?? 0} ข้อ</Pill>}
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'oklch(0.5 0.02 265)', marginBottom: 5 }}>
