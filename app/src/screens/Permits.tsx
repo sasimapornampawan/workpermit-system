@@ -12,7 +12,7 @@ import { C, L, MONO, tone, type Tone } from '../theme';
 export type PermitDraft = {
   title: string; contractorId: string; area: string; detail: string; startAt: string; endAt: string; workers: string;
   files: DraftFile[];
-  /** PPE chosen on top of the ones marked required for the work type. */
+  /** PPE chosen on top of the ones marked required for the selected work types. */
   extraPpe: string[];
 };
 export const EMPTY_DRAFT: PermitDraft = {
@@ -21,33 +21,46 @@ export const EMPTY_DRAFT: PermitDraft = {
 
 type Props = {
   step: number; onStep: (n: number) => void;
-  permitType: number; onPermitType: (i: number) => void;
+  permitTypes: string[]; onPermitTypes: (codes: string[]) => void;
   draft: PermitDraft; onDraft: (d: PermitDraft) => void;
 };
 
 const RISK_BY_TONE: Partial<Record<Tone, string>> = { bad: 'สูง', warn: 'ปานกลาง', ok: 'ต่ำ' };
+const TONE_RANK: Record<Tone, number> = { ok: 1, warn: 2, bad: 3, info: 0, flat: 0 };
 
 const twoCol = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, alignItems: 'start' } as const;
 
-export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft }: Props) {
+export function Permits({ step, onStep, permitTypes, onPermitTypes, draft, onDraft }: Props) {
   const profile = useProfile();
   const contractors = useContractors();
   const badges = useBadges();
+  const ppe = usePpeItems();
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ error: boolean; text: string } | null>(null);
 
-  const type = PERMIT_TYPES[permitType];
-  const risk = RISK_BY_TONE[type.tone] ?? 'ต่ำ';
+  const selectedTypes = PERMIT_TYPES.filter((t) => permitTypes.includes(t.code));
+  const typeCodes = selectedTypes.map((t) => t.code);
+  const typeNames = selectedTypes.map((t) => t.name).join(' + ');
+  const topTone = selectedTypes.reduce<Tone>((best, t) => (TONE_RANK[t.tone] > TONE_RANK[best] ? t.tone : best), 'ok');
+  const risk = selectedTypes.length ? (RISK_BY_TONE[topTone] ?? 'ต่ำ') : 'ต่ำ';
   const isContractor = profile.role === 'contractor';
   const contractorId = isContractor ? profile.contractor_id ?? '' : draft.contractorId;
   const contractor = contractors.data.find((c) => c.id === contractorId);
   const crew = contractor ? badges.data.filter((b) => b.company === contractor.name) : [];
-  const ppe = usePpeItems();
-  const requiredPpe = ppe.data
-    .filter((p) => p.active && p.required && (p.permit_type_code === null || p.permit_type_code === type.code))
-    .map((p) => p.label);
+  const requiredPpe = [...new Set(
+    ppe.data
+      .filter((p) => p.active && p.required && (p.permit_type_code === null || typeCodes.includes(p.permit_type_code)))
+      .map((p) => p.label),
+  )];
+
+  const toggleType = (code: string) =>
+    onPermitTypes(permitTypes.includes(code) ? permitTypes.filter((c) => c !== code) : [...permitTypes, code]);
 
   async function submit() {
+    if (!selectedTypes.length) {
+      setResult({ error: true, text: 'กรุณาเลือกประเภทงานอย่างน้อย 1 ประเภท ในขั้นตอนที่ 1' });
+      return;
+    }
     const missing = [
       !draft.title.trim() && 'ชื่องาน',
       !contractorId && 'บริษัทผู้รับเหมา',
@@ -70,7 +83,8 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
     const { data, error } = await supabase
       .from('permits')
       .insert({
-        type: `${type.name} — ${draft.title.trim()}`,
+        type: `${typeNames} — ${draft.title.trim()}`,
+        work_types: typeCodes,
         contractor_id: contractorId,
         area: draft.area.trim(),
         risk,
@@ -96,6 +110,7 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
     }
     setSubmitting(false);
     onDraft(EMPTY_DRAFT);
+    onPermitTypes([]);
     onStep(1);
     setResult(failures.length
       ? { error: true, text: `ส่งขออนุมัติแล้ว — เลขที่ ${data.permit_no} แต่แนบไฟล์ไม่สำเร็จ ${failures.length} ไฟล์ (${failures.join(' · ')}) ให้แนบใหม่ในหน้ารายละเอียด Permit` }
@@ -124,7 +139,7 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
         </div>
       </Card>
 
-      {step === 1 && <StepType selected={permitType} onSelect={onPermitType} />}
+      {step === 1 && <StepType selected={permitTypes} onToggle={toggleType} />}
       {step === 2 && (
         <StepDetails
           draft={draft}
@@ -135,11 +150,11 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
         />
       )}
       {step === 3 && (
-        <StepRisk typeCode={type.code} extraPpe={draft.extraPpe} onExtraPpe={(extraPpe) => onDraft({ ...draft, extraPpe })} />
+        <StepRisk typeCodes={typeCodes} extraPpe={draft.extraPpe} onExtraPpe={(extraPpe) => onDraft({ ...draft, extraPpe })} />
       )}
       {step === 4 && (
         <StepApproval
-          typeName={type.name}
+          typeName={typeNames || '— ยังไม่ได้เลือกประเภทงาน —'}
           risk={risk}
           profile={profile}
           contractor={contractor}
@@ -164,19 +179,27 @@ export function Permits({ step, onStep, permitType, onPermitType, draft, onDraft
   );
 }
 
-function StepType({ selected, onSelect }: { selected: number; onSelect: (i: number) => void }) {
+function StepType({ selected, onToggle }: { selected: string[]; onToggle: (code: string) => void }) {
   return (
     <Card style={{ padding: 18 }}>
       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>เลือกประเภทงานที่ขออนุญาต</div>
-      <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)', marginBottom: 16 }}>ระดับความเสี่ยงของประเภทงานกำหนดลำดับการอนุมัติ</div>
+      <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)', marginBottom: 16 }}>
+        เลือกได้มากกว่า 1 ประเภทในใบเดียว ระดับความเสี่ยงจะใช้ระดับสูงสุดจากที่เลือก และรายการ JSA กับ PPE จะรวมทุกประเภท
+        {selected.length > 0 && <span style={{ color: C.accFg, fontWeight: 600 }}> · เลือกแล้ว {selected.length} ประเภท</span>}
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(225px, 1fr))', gap: 10 }}>
-        {PERMIT_TYPES.map((t, i) => {
-          const on = i === selected;
+        {PERMIT_TYPES.map((t) => {
+          const on = selected.includes(t.code);
           return (
-            <div key={t.code} onClick={() => onSelect(i)} className="h-type" style={{ padding: '14px 15px', borderRadius: 10, cursor: 'pointer', border: `1px solid ${on ? C.accBd : L.idle}`, background: on ? C.accBg : '#fff' }}>
+            <div key={t.code} onClick={() => onToggle(t.code)} className="h-type" role="checkbox" aria-checked={on} tabIndex={0}
+              onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && onToggle(t.code)}
+              style={{ padding: '14px 15px', borderRadius: 10, cursor: 'pointer', border: `1px solid ${on ? C.accBd : L.idle}`, background: on ? C.accBg : '#fff' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 7 }}>
                 <div style={{ width: 10, height: 10, borderRadius: 3, background: tone(t.tone).accent }} />
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{t.name}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{t.name}</div>
+                <div style={{ width: 17, height: 17, flex: '0 0 17px', borderRadius: 4, border: `1.5px solid ${on ? C.acc : 'oklch(0.82 0.01 265)'}`, background: on ? C.acc : '#fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
+                  {on ? '✓' : ''}
+                </div>
               </div>
               <div style={{ fontSize: 11.5, color: 'oklch(0.5 0.02 265)', lineHeight: 1.55, marginBottom: 9 }}>{t.detail}</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -230,13 +253,15 @@ function StepDetails({ draft, onDraft, contractors, contractorId, lockedName }: 
 
 const JSA_COLS = 'minmax(0, 1fr) minmax(0, 1.2fr) 78px';
 
-function StepRisk({ typeCode, extraPpe, onExtraPpe }: { typeCode: string; extraPpe: string[]; onExtraPpe: (labels: string[]) => void }) {
+function StepRisk({ typeCodes, extraPpe, onExtraPpe }: { typeCodes: string[]; extraPpe: string[]; onExtraPpe: (labels: string[]) => void }) {
   const hazards = useJsaHazards();
   const ppe = usePpeItems();
   const [custom, setCustom] = useState('');
-  const applies = (code: string | null) => code === null || code === typeCode;
+  const applies = (code: string | null) => code === null || typeCodes.includes(code);
   const hazardList = hazards.data.filter((h) => h.active && applies(h.permit_type_code)).sort((a, b) => a.sort - b.sort);
-  const ppeList = ppe.data.filter((p) => p.active && applies(p.permit_type_code)).sort((a, b) => Number(b.required) - Number(a.required) || a.sort - b.sort);
+  // Required items sort first, so the first copy of a label that several work types share is the required one.
+  const ppeSorted = ppe.data.filter((p) => p.active && applies(p.permit_type_code)).sort((a, b) => Number(b.required) - Number(a.required) || a.sort - b.sort);
+  const ppeList = ppeSorted.filter((p, i) => ppeSorted.findIndex((q) => q.label === p.label) === i);
   const highCount = hazardList.filter((h) => h.level === 'สูง').length;
   const catalogueLabels = new Set(ppeList.map((p) => p.label));
   const customPpe = extraPpe.filter((label) => !catalogueLabels.has(label));
@@ -258,7 +283,7 @@ function StepRisk({ typeCode, extraPpe, onExtraPpe }: { typeCode: string; extraP
     <div style={twoCol}>
       <Card style={{ padding: 18 }}>
         <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 3 }}>การชี้บ่งอันตรายและมาตรการควบคุม (JSA)</div>
-        <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)', marginBottom: 14 }}>รายการตามประเภทงานที่เลือก กำหนดโดยเจ้าหน้าที่ความปลอดภัย</div>
+        <div style={{ fontSize: 11.5, color: 'oklch(0.56 0.02 265)', marginBottom: 14 }}>รายการรวมจากทุกประเภทงานที่เลือก กำหนดโดยเจ้าหน้าที่ความปลอดภัย</div>
         <div style={{ display: 'grid', gridTemplateColumns: JSA_COLS, gap: 12, padding: '8px 0', borderBottom: `1px solid ${L.headBd}`, fontSize: 10.5, fontWeight: 600, letterSpacing: '0.06em', whiteSpace: 'nowrap', color: 'oklch(0.5 0.02 265)' }}>
           <div>อันตราย</div><div>มาตรการควบคุม</div><div>ระดับ</div>
         </div>

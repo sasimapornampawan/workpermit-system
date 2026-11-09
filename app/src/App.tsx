@@ -34,7 +34,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
   // Kept at app level so progress survives switching between menu screens.
   const [badge, setBadge] = useState(0);
   const [step, setStep] = useState(1);
-  const [permitType, setPermitType] = useState(0);
+  const [permitTypes, setPermitTypes] = useState<string[]>([]);
   const [draft, setDraft] = useState<PermitDraft>(EMPTY_DRAFT);
 
   const userId = session?.user.id;
@@ -42,6 +42,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
     setScreen(defaultScreen);
     setStep(1);
     setDraft(EMPTY_DRAFT);
+    setPermitTypes([]);
     setQuery('');
   }, [userId, defaultScreen]);
 
@@ -90,7 +91,7 @@ export default function App({ defaultScreen = 'dashboard', showEnglishLabels = t
             {current === 'badges' && <Badges selected={badge} onSelect={setBadge} />}
             {current === 'training' && <Training />}
             {current === 'permits' && (
-              <Permits step={step} onStep={setStep} permitType={permitType} onPermitType={setPermitType} draft={draft} onDraft={setDraft} />
+              <Permits step={step} onStep={setStep} permitTypes={permitTypes} onPermitTypes={setPermitTypes} draft={draft} onDraft={setDraft} />
             )}
             {current === 'findings' && <Findings />}
             {current === 'reports' && <Reports />}

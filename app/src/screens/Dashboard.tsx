@@ -5,7 +5,8 @@ import { PermitDetail } from '../components/PermitDetail';
 import { Bar, Card, CardTitle, DataState, Pill, StatTile, TableHead, TableRow, ellipsis } from '../components/ui';
 import { useCan, useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, useContractors, useFindings, usePermits } from '../hooks/useData';
-import { countBy, pct, sameMonth } from '../lib/stats';
+import { PERMIT_TYPES } from '../data';
+import { pct, sameMonth } from '../lib/stats';
 import { APPROVER_ROLES, ROLE_LABEL, permitStatus, riskTone, supabase, type Permit, type Role } from '../lib/supabase';
 import { C, L, MONO, tone } from '../theme';
 
@@ -54,7 +55,13 @@ export function Dashboard({ query }: { query: string }) {
   ];
 
   const thisMonth = permits.data.filter((p) => sameMonth(new Date(p.created_at), now));
-  const typeBars = [...countBy(thisMonth, (p) => p.type.split(' — ')[0])].sort((a, b) => b[1] - a[1]);
+  const typeNameByCode = new Map(PERMIT_TYPES.map((t) => [t.code, t.name]));
+  const typeCounts = new Map<string, number>();
+  for (const p of thisMonth) {
+    const names = p.work_types?.length ? p.work_types.map((code) => typeNameByCode.get(code) ?? code) : [p.type.split(' — ')[0]];
+    for (const name of names) typeCounts.set(name, (typeCounts.get(name) ?? 0) + 1);
+  }
+  const typeBars = [...typeCounts].sort((a, b) => b[1] - a[1]);
   const maxType = Math.max(...typeBars.map(([, n]) => n));
 
   return (

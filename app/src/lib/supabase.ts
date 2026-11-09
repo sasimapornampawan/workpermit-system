@@ -94,6 +94,8 @@ export type Permit = {
   workers: number | null;
   /** Labels chosen in step 3; needs SUPABASE_PHASE17_PERMIT_PPE.sql. */
   ppe?: string[];
+  /** Selected work type codes; needs SUPABASE_PHASE21_MULTI_WORK_TYPES.sql. Older permits leave it empty. */
+  work_types?: string[];
   created_at: string;
   permit_next_step: Role | null;
   contractors: { name: string } | null;
