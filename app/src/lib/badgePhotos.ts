@@ -45,6 +45,15 @@ export async function uploadBadgePhoto(badgeId: string, file: File): Promise<str
   return null;
 }
 
+/** Returns an error message, or null on success. */
+export async function removeBadgePhoto(badgeId: string): Promise<string | null> {
+  if (!supabase) return 'ยังไม่ได้ตั้งค่า Supabase';
+  const { data: oldPath, error } = await supabase.rpc('clear_badge_photo', { p_badge_id: badgeId });
+  if (error) return `ลบรูปไม่สำเร็จ: ${error.message}`;
+  if (oldPath) await supabase.storage.from(BUCKET).remove([oldPath as string]);
+  return null;
+}
+
 /** Short-lived link to a private photo; null while loading or when there is no photo. */
 export function useBadgePhotoUrl(path: string | null) {
   const [url, setUrl] = useState<string | null>(null);

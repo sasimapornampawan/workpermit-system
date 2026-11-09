@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { BadgeQr } from '../components/BadgeQr';
-import { uploadBadgePhoto, useBadgePhotoUrl, verifyUrl } from '../lib/badgePhotos';
+import { removeBadgePhoto, uploadBadgePhoto, useBadgePhotoUrl, verifyUrl } from '../lib/badgePhotos';
 import { printWith } from '../lib/print';
 import { BRAND } from '../brand';
 import { BadgeForm } from '../components/BadgeForm';
@@ -159,7 +159,16 @@ function PhotoPicker({ badge, onResult }: { badge: Badge; onResult: (m: { error:
     onResult(failure ? { error: true, text: failure } : { error: false, text: `บันทึกรูปของ ${badge.name} แล้ว` });
   }
 
+  async function remove() {
+    if (!window.confirm(`ลบรูปของ ${badge.name} ออกจากบัตร?`)) return;
+    setBusy(true);
+    const failure = await removeBadgePhoto(badge.id);
+    setBusy(false);
+    onResult(failure ? { error: true, text: failure } : { error: false, text: `ลบรูปของ ${badge.name} แล้ว` });
+  }
+
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
     <label
       className={busy ? undefined : 'h-outline'}
       style={{ display: 'block', textAlign: 'center', padding: 8, borderRadius: 8, border: '1px dashed oklch(0.82 0.02 265)', background: '#fff', fontSize: 12.5, fontWeight: 500, color: 'oklch(0.42 0.12 265)', cursor: busy ? 'default' : 'pointer' }}
@@ -167,6 +176,17 @@ function PhotoPicker({ badge, onResult }: { badge: Badge; onResult: (m: { error:
       {busy ? 'กำลังอัปโหลดรูป...' : badge.photo_path ? 'เปลี่ยนรูปพนักงาน' : '+ อัปโหลดรูปพนักงาน'}
       <input type="file" accept="image/jpeg,image/png" disabled={busy} onChange={change} style={{ display: 'none' }} />
     </label>
+    {badge.photo_path && (
+      <button
+        type="button"
+        disabled={busy}
+        onClick={remove}
+        style={{ border: 'none', background: 'none', padding: 0, fontSize: 11.5, color: tone('bad').fg, cursor: busy ? 'default' : 'pointer', textAlign: 'center' }}
+      >
+        ลบรูปพนักงาน
+      </button>
+    )}
+    </div>
   );
 }
 

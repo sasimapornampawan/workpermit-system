@@ -6,7 +6,7 @@ import { useCan } from '../hooks/useAuth';
 import { notifyDataChanged, useBadges, useContractors } from '../hooks/useData';
 import { countBy } from '../lib/stats';
 import { contractorStatus, supabase, type Contractor } from '../lib/supabase';
-import { C, L, MONO } from '../theme';
+import { C, L, MONO, tone } from '../theme';
 
 const COLS = 'minmax(0, 1.5fr) 130px 84px 118px 118px 110px';
 
@@ -109,7 +109,47 @@ function ContractorForm({ contractor, onClose }: { contractor: Contractor | null
   const [form, setForm] = useState<FormState>(() => toForm(contractor));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
   const set = (key: keyof FormState) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [key]: e.target.value });
+
+  async function remove() {
+    if (!supabase || !contractor) return;
+    if (!window.confirm(`ลบบริษัท ${contractor.name} ถาวร?\nลบได้เฉพาะบริษัทที่ยังไม่มีข้อมูลที่เกี่ยวข้องเลย`)) return;
+    setRemoving(true);
+    setError(null);
+    const [permits, findings, badges, exams, users] = await Promise.all([
+      supabase.from('permits').select('id', { count: 'exact', head: true }).eq('contractor_id', contractor.id),
+      supabase.from('findings').select('id', { count: 'exact', head: true }).eq('contractor_id', contractor.id),
+      supabase.from('badges').select('id', { count: 'exact', head: true }).eq('company', contractor.name),
+      supabase.from('exam_results').select('id', { count: 'exact', head: true }).eq('company', contractor.name),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('contractor_id', contractor.id),
+    ]);
+    const linked = [
+      { label: 'คำขอ Permit', count: permits.count ?? 0 },
+      { label: 'ข้อบกพร่อง', count: findings.count ?? 0 },
+      { label: 'บัตร/พนักงาน', count: badges.count ?? 0 },
+      { label: 'ผลสอบ', count: exams.count ?? 0 },
+      { label: 'บัญชีผู้ใช้', count: users.count ?? 0 },
+    ].filter((x) => x.count > 0);
+    if (linked.length) {
+      setRemoving(false);
+      setError(`ลบไม่ได้ เพราะมี ${linked.map((x) => `${x.label} ${x.count} รายการ`).join(' · ')} ให้เปลี่ยนสถานะเป็น "ระงับ" แทน`);
+      return;
+    }
+
+    const { data: rows, error: err } = await supabase.from('contractors').delete().eq('id', contractor.id).select('id');
+    setRemoving(false);
+    if (err) {
+      setError(err.code === '23503' ? 'ลบไม่ได้เพราะยังมีข้อมูลที่อ้างถึงบริษัทนี้' : `ลบไม่สำเร็จ: ${err.message}`);
+      return;
+    }
+    if (!rows?.length) {
+      setError('ไม่มีสิทธิ์ลบบริษัทนี้');
+      return;
+    }
+    notifyDataChanged();
+    onClose();
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -169,6 +209,11 @@ function ContractorForm({ contractor, onClose }: { contractor: Contractor | null
         </div>
         {error && <FormMessage error style={{ marginTop: 12 }}>{error}</FormMessage>}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+          {contractor && (
+            <Button variant="outline" disabled={saving || removing} onClick={remove} style={{ color: tone('bad').fg, marginRight: 'auto' }}>
+              {removing ? 'กำลังตรวจสอบ...' : 'ลบบริษัท'}
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose}>ยกเลิก</Button>
           <Button type="submit" disabled={saving}>{saving ? 'กำลังบันทึก...' : contractor ? 'บันทึกการแก้ไข' : 'บันทึก'}</Button>
         </div>
