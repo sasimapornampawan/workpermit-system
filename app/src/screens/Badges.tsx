@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { BadgeQr } from '../components/BadgeQr';
-import { removeBadgePhoto, uploadBadgePhoto, useBadgePhotoUrl, verifyUrl } from '../lib/badgePhotos';
+import { deleteBadgeFile, removeBadgePhoto, uploadBadgePhoto, useBadgePhotoUrl, verifyUrl } from '../lib/badgePhotos';
 import { printWith } from '../lib/print';
 import { BRAND } from '../brand';
 import { BadgeForm } from '../components/BadgeForm';
@@ -35,6 +35,25 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
   function select(i: number) {
     setMessage(null);
     onSelect(i);
+  }
+
+  async function removeBadge(badge: Badge) {
+    if (!supabase) return;
+    const warning = badge.status === 'issued'
+      ? `ลบบัตรที่ออกแล้ว ${badge.card_no ?? ''} ของ ${badge.name}?\nQR บนบัตรจะตรวจสอบไม่พบทันที และกู้คืนไม่ได้`
+      : `ลบคำขอบัตรของ ${badge.name}?\nลบแล้วกู้คืนไม่ได้`;
+    if (!window.confirm(warning)) return;
+    setBusy(true);
+    setMessage(null);
+    const { data: rows, error: err } = await supabase.from('badges').delete().eq('id', badge.id).select('id');
+    setBusy(false);
+    if (err || !rows?.length) {
+      setMessage({ error: true, text: `ลบไม่สำเร็จ: ${err?.message ?? 'ไม่มีสิทธิ์ลบรายการนี้'}` });
+      return;
+    }
+    if (badge.photo_path) await deleteBadgeFile(badge.photo_path);
+    setMessage({ error: false, text: `ลบ${badge.name} แล้ว` });
+    notifyDataChanged();
   }
 
   async function issue(badge: Badge) {
@@ -132,6 +151,11 @@ export function Badges({ selected, onSelect }: { selected: number; onSelect: (i:
               <Button variant="outline" onClick={() => setEditing(current)} style={{ padding: '9px 14px' }}>แก้ไข</Button>
               <Button variant="outline" onClick={() => printWith('badge')} style={{ padding: '9px 14px' }}>พิมพ์</Button>
             </div>
+          )}
+          {canManageBadges && (isSafety || current.status !== 'issued') && (
+            <Button variant="outline" disabled={busy} onClick={() => removeBadge(current)} style={{ padding: '7px 12px', fontSize: 12, color: tone('bad').fg }}>
+              ลบบัตร
+            </Button>
           )}
           {message ? (
             <FormMessage error={message.error} style={{ textAlign: 'center' }}>{message.text}</FormMessage>

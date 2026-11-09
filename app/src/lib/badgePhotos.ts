@@ -54,6 +54,11 @@ export async function removeBadgePhoto(badgeId: string): Promise<string | null> 
   return null;
 }
 
+/** Removes a photo file once its badge row has been deleted. */
+export async function deleteBadgeFile(path: string) {
+  if (supabase) await supabase.storage.from(BUCKET).remove([path]);
+}
+
 /** Short-lived link to a private photo; null while loading or when there is no photo. */
 export function useBadgePhotoUrl(path: string | null) {
   const [url, setUrl] = useState<string | null>(null);
