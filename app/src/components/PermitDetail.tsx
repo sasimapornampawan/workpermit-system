@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useCan } from '../hooks/useAuth';
+import { useCan, useProfile } from '../hooks/useAuth';
 import { notifyDataChanged, usePermitApprovals, usePermitEvents } from '../hooks/useData';
+import { PERMIT_FILES_BUCKET } from '../lib/attachments';
 import {
   PERMIT_ACTIONS, ROLE_LABEL, permitStatus, riskTone, supabase,
   type Permit, type PermitAction,
@@ -15,13 +16,39 @@ const formatDateTime = (iso: string) => new Date(iso).toLocaleString('th-TH', { 
 type HistoryItem = { at: string; title: string; by: string | null; note: string | null; tone: Tone };
 
 export function PermitDetail({ permit, onClose }: { permit: Permit; onClose: () => void }) {
+  const profile = useProfile();
   const can = useCan();
   const approvals = usePermitApprovals();
   const events = usePermitEvents();
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState<PermitAction | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+
+  const hasDecisions = approvals.data.some((a) => a.permit_id === permit.id);
+  const canDelete = (profile.role === 'safety' && can('approve_permits') && ['pending', 'rejected'].includes(permit.status))
+    || (profile.role === 'contractor' && can('request_permits') && permit.status === 'pending' && !hasDecisions);
+
+  async function removePermit() {
+    if (!supabase) return;
+    const warning = permit.status === 'rejected'
+      ? `ลบ Permit ${permit.permit_no} ที่ไม่อนุมัติ?\nประวัติการพิจารณาและเอกสารแนบจะถูกลบด้วย ลบแล้วกู้คืนไม่ได้`
+      : `ลบคำขอ ${permit.permit_no}?\nเอกสารแนบจะถูกลบด้วย ลบแล้วกู้คืนไม่ได้`;
+    if (!window.confirm(warning)) return;
+    setDeleting(true);
+    setMessage(null);
+    const { data: files } = await supabase.from('permit_attachments').select('file_path').eq('permit_id', permit.id);
+    if (files?.length) await supabase.storage.from(PERMIT_FILES_BUCKET).remove(files.map((f) => f.file_path as string));
+    const { data: rows, error } = await supabase.from('permits').delete().eq('id', permit.id).select('id');
+    setDeleting(false);
+    if (error || !rows?.length) {
+      setMessage({ error: true, text: `ลบไม่สำเร็จ: ${error?.message ?? 'ไม่มีสิทธิ์ลบรายการนี้'}` });
+      return;
+    }
+    notifyDataChanged();
+    onClose();
+  }
 
   useEffect(() => {
     setNote('');
@@ -165,6 +192,16 @@ export function PermitDetail({ permit, onClose }: { permit: Permit; onClose: () 
         <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${L.headBd}` }}>
           <PermitAttachments permitId={permit.id} canUpload={can('request_permits') || can('manage_permit_status')} />
         </div>
+
+        {canDelete && (
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${L.headBd}`, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {message && <FormMessage error={message.error}>{message.text}</FormMessage>}
+            <Button variant="outline" disabled={deleting} onClick={removePermit} style={{ color: tone('bad').fg }}>
+              {deleting ? 'กำลังลบ...' : profile.role === 'contractor' ? 'ยกเลิกคำขอนี้' : 'ลบ Permit'}
+            </Button>
+          </div>
+        )}
+        {!canDelete && message && <FormMessage error={message.error} style={{ marginTop: 10 }}>{message.text}</FormMessage>}
       </Card>
     </div>
   );
